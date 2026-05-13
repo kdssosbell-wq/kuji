@@ -1,0 +1,3053 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>KUJI 온라인 경품 뽑기</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #07101f;
+    --panel: rgba(12, 22, 42, .82);
+    --panel-soft: rgba(255, 255, 255, .08);
+    --line: rgba(83, 218, 255, .24);
+    --blue: #29c7ff;
+    --blue-2: #7be8ff;
+    --orange: #ff8a1f;
+    --orange-2: #ffd166;
+    --green: #37f2a3;
+    --red: #ff4f7b;
+    --text: #f7fbff;
+    --muted: #9eb3cc;
+    --shadow-blue: 0 0 28px rgba(41, 199, 255, .35);
+    --shadow-orange: 0 0 30px rgba(255, 138, 31, .36);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html,
+  body {
+    width: 100%;
+    min-height: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    position: fixed;
+    inset: 0;
+    font-family: Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    background: #020b1c;
+    color: var(--text);
+    user-select: none;
+    touch-action: none;
+  }
+
+  button,
+  textarea {
+    font: inherit;
+  }
+
+  button {
+    border: 0;
+    color: inherit;
+  }
+
+  .app-shell {
+    position: relative;
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .ambient {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(123, 232, 255, .035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(123, 232, 255, .035) 1px, transparent 1px);
+    background-size: 34px 34px;
+    mask-image: linear-gradient(to bottom, rgba(0, 0, 0, .9), rgba(0, 0, 0, .38));
+  }
+
+  .ambient::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, .04) 0,
+      rgba(255, 255, 255, .04) 1px,
+      transparent 1px,
+      transparent 5px
+    );
+    opacity: .18;
+    animation: scan 7s linear infinite;
+  }
+
+  @keyframes scan {
+    from { transform: translateY(-50px); }
+    to { transform: translateY(50px); }
+  }
+
+  .bg-miku {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .bg-miku svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .screen.is-active {
+    display: flex;
+  }
+
+  .topbar {
+    flex: 0 0 auto;
+    padding: calc(14px + var(--safe-top)) 14px 12px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(5, 11, 24, .76);
+    backdrop-filter: blur(16px);
+  }
+
+  .topbar-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .brand {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .brand strong {
+    font-size: clamp(19px, 5vw, 30px);
+    line-height: 1.08;
+    font-weight: 900;
+    text-shadow: var(--shadow-blue);
+  }
+
+  .brand span {
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .top-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+
+  .icon-btn {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    background: rgba(255, 255, 255, .08);
+    cursor: pointer;
+    transition: transform .16s ease, background .16s ease, border-color .16s ease;
+  }
+
+  .icon-btn:active {
+    transform: scale(.95);
+  }
+
+  .icon-btn:hover {
+    border-color: rgba(123, 232, 255, .48);
+    background: rgba(41, 199, 255, .12);
+  }
+
+  .icon {
+    position: relative;
+    display: block;
+    width: 20px;
+    height: 20px;
+  }
+
+  .icon.settings::before,
+  .icon.settings::after {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    box-shadow: 0 -8px 0 -6px currentColor, 0 8px 0 -6px currentColor, -8px 0 0 -6px currentColor, 8px 0 0 -6px currentColor;
+  }
+
+  .icon.settings::after {
+    inset: 8px;
+    border-width: 2px;
+    box-shadow: none;
+  }
+
+  .icon.random::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 5px;
+    width: 15px;
+    height: 10px;
+    border-top: 2px solid currentColor;
+    border-right: 2px solid currentColor;
+    transform: skewX(-18deg);
+  }
+
+  .icon.random::after {
+    content: "";
+    position: absolute;
+    right: 1px;
+    top: 2px;
+    border-left: 6px solid currentColor;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+  }
+
+  .status-strip {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .grade-chip {
+    min-width: 0;
+    padding: 7px 5px;
+    border-radius: 8px;
+    border: 1px solid color-mix(in srgb, var(--grade-color), transparent 44%);
+    background: color-mix(in srgb, var(--grade-color), transparent 88%);
+    box-shadow: 0 0 18px color-mix(in srgb, var(--grade-color), transparent 78%);
+    text-align: center;
+  }
+
+  .grade-chip b {
+    display: block;
+    font-size: 16px;
+    color: var(--grade-color);
+  }
+
+  .grade-chip span {
+    display: block;
+    margin-top: 1px;
+    color: var(--muted);
+    font-size: 10px;
+  }
+
+  .grid-scroll {
+    position: relative;
+    z-index: 1;
+    flex: 1 1 auto;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 13px 12px 112px;
+  }
+
+  .ticket-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 9px;
+    width: min(100%, 980px);
+    margin: 0 auto;
+  }
+
+  .ticket {
+    position: relative;
+    aspect-ratio: 1.42 / 1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    background:
+      linear-gradient(135deg, #ff9a27 0%, #ff6f16 46%, #ffb23d 100%);
+    border: 2px solid rgba(255, 212, 139, .88);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .24), 0 0 16px rgba(255, 138, 31, .18);
+    transform: translateZ(0);
+    transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease, opacity .16s ease;
+  }
+
+  .ticket:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, .3), var(--shadow-orange);
+  }
+
+  .ticket:active {
+    transform: scale(.94);
+  }
+
+  .ticket::before {
+    content: "";
+    position: absolute;
+    inset: 6px;
+    border: 1px dashed rgba(255, 255, 255, .62);
+    border-radius: 5px;
+  }
+
+  .ticket::after {
+    content: "";
+    position: absolute;
+    top: -20%;
+    left: -70%;
+    width: 45%;
+    height: 140%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .42), transparent);
+    transform: rotate(18deg);
+    animation: shine 4.5s ease-in-out infinite;
+  }
+
+  .ticket:nth-child(6n+2)::after { animation-delay: .45s; }
+  .ticket:nth-child(6n+3)::after { animation-delay: .9s; }
+  .ticket:nth-child(6n+4)::after { animation-delay: 1.35s; }
+  .ticket:nth-child(6n+5)::after { animation-delay: 1.8s; }
+  .ticket:nth-child(6n)::after { animation-delay: 2.25s; }
+
+  @keyframes shine {
+    0%, 26% { left: -70%; }
+    42%, 100% { left: 130%; }
+  }
+
+  .ticket-body {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 10px 7px;
+    text-align: center;
+  }
+
+  .ticket-no {
+    position: absolute;
+    top: 6px;
+    left: 7px;
+    font-size: 9px;
+    font-weight: 800;
+    color: rgba(255, 255, 255, .75);
+  }
+
+  .ticket-logo {
+    width: min(46px, 42%);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border-radius: 7px;
+    background: #101728;
+    color: #fff;
+    font-size: clamp(11px, 2.8vw, 15px);
+    font-weight: 900;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .16);
+  }
+
+  .ticket-label {
+    font-size: 10px;
+    font-weight: 900;
+    color: #fff8ed;
+  }
+
+  .barcode {
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    gap: 1px;
+    width: 44px;
+    height: 11px;
+    padding: 2px;
+    background: #fff;
+    border-radius: 2px;
+  }
+
+  .barcode i {
+    width: 2px;
+    height: 100%;
+    background: #0d1220;
+  }
+
+  .ticket.is-used {
+    background: linear-gradient(135deg, #171f35, #0d1424);
+    border-color: color-mix(in srgb, var(--grade-color), transparent 30%);
+    box-shadow: 0 0 18px color-mix(in srgb, var(--grade-color), transparent 70%);
+  }
+
+  .ticket.is-used::after {
+    display: none;
+  }
+
+  .ticket.is-used .ticket-logo {
+    background: color-mix(in srgb, var(--grade-color), #050912 72%);
+    color: var(--grade-color);
+    font-size: clamp(19px, 4.2vw, 30px);
+    text-shadow: 0 0 18px currentColor;
+  }
+
+  .ticket.is-used .ticket-label {
+    color: var(--muted);
+  }
+
+  .bottom-dock {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+    padding: 12px 14px calc(13px + var(--safe-bottom));
+    border-top: 1px solid var(--line);
+    background: rgba(5, 11, 24, .83);
+    backdrop-filter: blur(18px);
+  }
+
+  .dock-inner {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 9px;
+    width: min(100%, 980px);
+    margin: 0 auto;
+  }
+
+  .remaining {
+    min-width: 0;
+  }
+
+  .remaining strong {
+    display: block;
+    font-size: 22px;
+    line-height: 1;
+    color: var(--blue-2);
+    text-shadow: var(--shadow-blue);
+  }
+
+  .remaining span {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .pill-btn,
+  .primary-btn,
+  .ghost-btn {
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 8px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform .16s ease, filter .16s ease, opacity .16s ease;
+    white-space: nowrap;
+  }
+
+  .pill-btn:active,
+  .primary-btn:active,
+  .ghost-btn:active {
+    transform: scale(.96);
+  }
+
+  .pill-btn {
+    border: 1px solid rgba(255, 255, 255, .14);
+    background: rgba(255, 255, 255, .08);
+  }
+
+  .primary-btn {
+    background: linear-gradient(135deg, var(--blue), var(--orange));
+    color: #07101f;
+    box-shadow: 0 0 22px rgba(41, 199, 255, .22), 0 0 24px rgba(255, 138, 31, .2);
+  }
+
+  .ghost-btn {
+    border: 1px solid rgba(255, 255, 255, .16);
+    background: rgba(255, 255, 255, .07);
+    color: var(--text);
+  }
+
+  .primary-btn:disabled,
+  .ghost-btn:disabled {
+    opacity: .45;
+    cursor: default;
+  }
+
+  #ticket-screen {
+    align-items: center;
+    justify-content: center;
+    padding: calc(18px + var(--safe-top)) 16px calc(18px + var(--safe-bottom));
+  }
+
+  .play-stage {
+    width: min(100%, 560px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .stage-copy {
+    width: 100%;
+    text-align: center;
+  }
+
+  .stage-copy h2 {
+    font-size: clamp(22px, 6vw, 35px);
+    line-height: 1.18;
+    font-weight: 900;
+    text-shadow: var(--shadow-blue);
+  }
+
+  .stage-copy p {
+    margin-top: 8px;
+    color: var(--muted);
+    line-height: 1.45;
+    font-size: clamp(13px, 3.6vw, 16px);
+  }
+
+  .coupon-wrap {
+    position: relative;
+    width: min(100%, 520px);
+    aspect-ratio: 1.58 / 1;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 24px 50px rgba(0, 0, 0, .42), var(--shadow-blue);
+    transform: translateZ(0);
+  }
+
+  .prize-underlay {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: .88fr 1.12fr;
+    align-items: center;
+    gap: 12px;
+    padding: clamp(14px, 4vw, 25px);
+    background:
+      linear-gradient(130deg, rgba(41, 199, 255, .24), rgba(255, 138, 31, .18)),
+      radial-gradient(circle at 20% 50%, color-mix(in srgb, var(--grade-color), transparent 48%), transparent 44%),
+      #0a1123;
+    border: 2px solid color-mix(in srgb, var(--grade-color), transparent 35%);
+  }
+
+  .under-grade {
+    display: grid;
+    place-items: center;
+    width: clamp(96px, 27vw, 155px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, .35);
+    color: var(--grade-color);
+    font-size: clamp(58px, 16vw, 102px);
+    line-height: 1;
+    font-weight: 900;
+    border: 3px solid currentColor;
+    box-shadow: inset 0 0 34px color-mix(in srgb, var(--grade-color), transparent 72%), 0 0 38px color-mix(in srgb, var(--grade-color), transparent 58%);
+    text-shadow: 0 0 26px currentColor;
+  }
+
+  .under-info {
+    min-width: 0;
+  }
+
+  .under-rank {
+    color: var(--grade-color);
+    font-size: clamp(20px, 5.6vw, 36px);
+    line-height: 1.06;
+    font-weight: 900;
+  }
+
+  .under-name {
+    margin-top: 7px;
+    color: #fff;
+    font-size: clamp(14px, 3.6vw, 20px);
+    font-weight: 800;
+    line-height: 1.28;
+  }
+
+  .under-small {
+    margin-top: 9px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.38;
+  }
+
+  #scratchCanvas,
+  #scratchFxCanvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  #scratchCanvas {
+    z-index: 3;
+    touch-action: none;
+    cursor: grab;
+  }
+
+  #scratchCanvas:active {
+    cursor: grabbing;
+  }
+
+  #scratchFxCanvas {
+    z-index: 4;
+    pointer-events: none;
+  }
+
+  .tear-light {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--peel-x, 0%);
+    z-index: 5;
+    width: 26px;
+    pointer-events: none;
+    opacity: var(--peel-opacity, .08);
+    transform: translateX(-13px);
+    background: linear-gradient(90deg, transparent, rgba(255, 244, 188, .82), rgba(41, 199, 255, .35), transparent);
+    filter: blur(5px);
+  }
+
+  .drag-guide {
+    position: absolute;
+    left: clamp(14px, 4vw, 24px);
+    right: clamp(14px, 4vw, 24px);
+    bottom: clamp(14px, 4vw, 24px);
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 11px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, .22);
+    background: rgba(6, 12, 26, .58);
+    color: #fff;
+    pointer-events: none;
+    opacity: var(--guide-opacity, .94);
+    transition: opacity .12s ease;
+  }
+
+  .guide-track {
+    position: relative;
+    flex: 1;
+    height: 4px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, .18);
+  }
+
+  .guide-fill {
+    width: calc(var(--progress, 0) * 100%);
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--blue), var(--orange-2));
+    box-shadow: 0 0 14px rgba(255, 209, 102, .72);
+  }
+
+  .guide-arrow {
+    width: 34px;
+    height: 22px;
+    position: relative;
+    flex: 0 0 auto;
+  }
+
+  .guide-arrow::before,
+  .guide-arrow::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    border-right: 3px solid #fff;
+    border-top: 3px solid #fff;
+    transform: translateY(-50%) rotate(45deg);
+    animation: arrowPulse .85s ease-in-out infinite;
+  }
+
+  .guide-arrow::before { left: 3px; opacity: .48; }
+  .guide-arrow::after { left: 15px; animation-delay: .15s; }
+
+  @keyframes arrowPulse {
+    0%, 100% { transform: translateY(-50%) translateX(0) rotate(45deg); opacity: .38; }
+    50% { transform: translateY(-50%) translateX(5px) rotate(45deg); opacity: 1; }
+  }
+
+  .guide-text {
+    font-size: 12px;
+    color: var(--orange-2);
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .stage-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 9px;
+    width: min(100%, 520px);
+  }
+
+  .progress-wrap {
+    width: min(100%, 520px);
+    height: 9px;
+    border-radius: 9px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, .1);
+    border: 1px solid rgba(255, 255, 255, .12);
+  }
+
+  .progress-bar {
+    width: calc(var(--progress, 0) * 100%);
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--blue), var(--orange));
+    box-shadow: 0 0 18px rgba(255, 138, 31, .55);
+    transition: width .04s linear;
+  }
+
+  #reveal-screen {
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 50% 44%, rgba(255, 138, 31, .24), transparent 34%),
+      linear-gradient(155deg, #030814, #0b1530 48%, #180b20);
+  }
+
+  #revealCanvas,
+  #confettiCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  #revealCanvas {
+    z-index: 1;
+  }
+
+  #confettiCanvas {
+    z-index: 40;
+  }
+
+  .reveal-center {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .reveal-letter {
+    color: var(--grade-color);
+    font-size: clamp(124px, 36vw, 230px);
+    line-height: .86;
+    font-weight: 900;
+    text-shadow: 0 0 28px currentColor, 0 0 75px currentColor;
+    animation: popGrade .56s cubic-bezier(.18, 1.28, .32, 1) both;
+  }
+
+  .reveal-rank {
+    margin-top: 15px;
+    color: #fff;
+    font-size: clamp(22px, 6vw, 38px);
+    font-weight: 900;
+    animation: riseIn .45s .18s both;
+  }
+
+  @keyframes popGrade {
+    from { transform: scale(.3) rotate(-12deg); opacity: 0; filter: blur(12px); }
+    to { transform: scale(1) rotate(0); opacity: 1; filter: blur(0); }
+  }
+
+  @keyframes riseIn {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  #result-screen {
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: calc(18px + var(--safe-top)) 16px calc(18px + var(--safe-bottom));
+    align-items: center;
+  }
+
+  .result-layout {
+    width: min(100%, 560px);
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 13px;
+    padding: 8px 0;
+  }
+
+  .result-kicker {
+    color: var(--orange-2);
+    font-size: clamp(22px, 6vw, 35px);
+    font-weight: 900;
+    text-align: center;
+    text-shadow: var(--shadow-orange);
+    animation: riseIn .48s both;
+  }
+
+  .result-card {
+    width: 100%;
+    border-radius: 14px;
+    border: 2px solid color-mix(in srgb, var(--grade-color), transparent 30%);
+    background:
+      radial-gradient(circle at 18% 0%, color-mix(in srgb, var(--grade-color), transparent 72%), transparent 36%),
+      linear-gradient(160deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .05));
+    box-shadow: 0 0 40px color-mix(in srgb, var(--grade-color), transparent 70%), 0 24px 44px rgba(0, 0, 0, .32);
+    padding: clamp(16px, 4vw, 24px);
+    animation: riseIn .48s .1s both;
+  }
+
+  .prize-image {
+    display: block;
+    width: min(100%, 320px);
+    aspect-ratio: 1.33 / 1;
+    margin: 0 auto 15px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, .2);
+    background: rgba(0, 0, 0, .22);
+  }
+
+  .result-main {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+    align-items: center;
+  }
+
+  .result-badge {
+    display: grid;
+    place-items: center;
+    width: 84px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 3px solid currentColor;
+    color: var(--grade-color);
+    background: rgba(0, 0, 0, .25);
+    font-size: 44px;
+    line-height: 1;
+    font-weight: 900;
+    text-shadow: 0 0 20px currentColor;
+  }
+
+  .result-copy {
+    min-width: 0;
+  }
+
+  .result-copy h2 {
+    color: #fff;
+    font-size: clamp(19px, 5vw, 28px);
+    line-height: 1.2;
+    font-weight: 900;
+  }
+
+  .result-copy p {
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .voucher-code {
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 9px;
+    padding: 11px 12px;
+    border-radius: 8px;
+    border: 1px dashed rgba(255, 255, 255, .26);
+    background: rgba(0, 0, 0, .18);
+    color: var(--blue-2);
+    font-weight: 900;
+    font-size: 13px;
+  }
+
+  .result-actions {
+    width: min(100%, 260px);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 9px;
+    animation: riseIn .48s .2s both;
+  }
+
+  .settings-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: none;
+    align-items: stretch;
+    justify-content: flex-end;
+    background: rgba(0, 0, 0, .58);
+    backdrop-filter: blur(8px);
+  }
+
+  .settings-panel.is-open {
+    display: flex;
+  }
+
+  .settings-sheet {
+    width: min(100%, 560px);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: calc(18px + var(--safe-top)) 16px calc(16px + var(--safe-bottom));
+    background: rgba(7, 16, 31, .96);
+    border-left: 1px solid var(--line);
+    box-shadow: -24px 0 60px rgba(0, 0, 0, .35);
+  }
+
+  .settings-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .settings-head h2 {
+    font-size: 22px;
+    font-weight: 900;
+  }
+
+  .settings-help {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .config-editor {
+    flex: 1 1 auto;
+    min-height: 0;
+    resize: none;
+    width: 100%;
+    padding: 13px;
+    border-radius: 8px;
+    border: 1px solid rgba(123, 232, 255, .22);
+    outline: none;
+    background: #050a14;
+    color: #d8edff;
+    font-family: "Cascadia Mono", Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.48;
+    user-select: text;
+    touch-action: pan-y;
+  }
+
+  .config-editor:focus {
+    border-color: var(--blue);
+    box-shadow: var(--shadow-blue);
+  }
+
+  .settings-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 9px;
+  }
+
+  .admin-form {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-right: 4px;
+  }
+
+  .admin-section {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(123, 232, 255, .18);
+    background: rgba(255, 255, 255, .055);
+  }
+
+  .admin-section h3 {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 900;
+  }
+
+  .admin-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .admin-count-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 9px;
+  }
+
+  .admin-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .admin-field input,
+  .admin-field textarea {
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid rgba(123, 232, 255, .22);
+    outline: none;
+    background: #050a14;
+    color: #d8edff;
+    font-size: 14px;
+    font-weight: 800;
+    user-select: text;
+  }
+
+  .admin-field input {
+    height: 42px;
+    padding: 0 11px;
+  }
+
+  .admin-field textarea {
+    min-height: 72px;
+    resize: vertical;
+    padding: 11px;
+    line-height: 1.45;
+  }
+
+  .admin-field input:focus,
+  .admin-field textarea:focus {
+    border-color: var(--blue);
+    box-shadow: var(--shadow-blue);
+  }
+
+  .admin-count-field input {
+    color: var(--grade-color);
+    border-color: color-mix(in srgb, var(--grade-color), transparent 58%);
+    box-shadow: inset 0 0 16px color-mix(in srgb, var(--grade-color), transparent 90%);
+  }
+
+  .admin-summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, .2);
+    color: var(--blue-2);
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .admin-summary.is-error {
+    color: var(--red);
+  }
+
+  .admin-product-row {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 8px;
+    align-items: start;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(123, 232, 255, .08);
+  }
+
+  .admin-product-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .admin-product-grade-badge {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--grade-color);
+    color: var(--grade-color);
+    font-size: 14px;
+    font-weight: 900;
+    margin-top: 20px;
+    flex-shrink: 0;
+  }
+
+  .admin-product-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .pin-panel {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(0, 0, 0, .62);
+    backdrop-filter: blur(8px);
+  }
+
+  .pin-panel.is-open {
+    display: flex;
+  }
+
+  .pin-card {
+    width: min(100%, 360px);
+    border-radius: 14px;
+    border: 1px solid rgba(123, 232, 255, .26);
+    background:
+      radial-gradient(circle at 18% 0%, rgba(41, 199, 255, .16), transparent 42%),
+      rgba(7, 16, 31, .96);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .48), var(--shadow-blue);
+    padding: 18px;
+  }
+
+  .pin-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .pin-head h2 {
+    font-size: 21px;
+    font-weight: 900;
+  }
+
+  .pin-help {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .pin-dots {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 20px 0 10px;
+  }
+
+  .pin-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(123, 232, 255, .6);
+    background: transparent;
+    transition: background .16s ease, border-color .16s ease, transform .16s ease;
+  }
+
+  .pin-dot.is-filled {
+    background: var(--orange-2);
+    border-color: var(--orange-2);
+    box-shadow: 0 0 14px rgba(255, 209, 102, .62);
+    transform: scale(1.08);
+  }
+
+  .pin-error {
+    min-height: 18px;
+    color: var(--red);
+    text-align: center;
+    font-size: 12px;
+    font-weight: 900;
+    opacity: 0;
+  }
+
+  .pin-error.is-visible {
+    opacity: 1;
+    animation: pinShake .3s ease;
+  }
+
+  @keyframes pinShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-7px); }
+    75% { transform: translateX(7px); }
+  }
+
+  .pin-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .pin-key {
+    min-height: 54px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, .13);
+    background: rgba(255, 255, 255, .08);
+    color: #fff;
+    font-size: 22px;
+    font-weight: 900;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .pin-key:active,
+  .pin-key:hover,
+  .pin-key:focus {
+    background: rgba(255, 255, 255, .08);
+    border-color: rgba(255, 255, 255, .13);
+    transform: none;
+    outline: none;
+  }
+
+  .pin-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(18px + var(--safe-bottom));
+    z-index: 200;
+    max-width: min(92vw, 420px);
+    padding: 11px 14px;
+    border-radius: 8px;
+    background: rgba(9, 17, 34, .92);
+    border: 1px solid rgba(123, 232, 255, .3);
+    color: #fff;
+    transform: translate(-50%, 16px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease, transform .2s ease;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  .toast.is-on {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+
+  @media (min-width: 640px) {
+    .ticket-grid {
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .grid-scroll {
+      padding-left: 18px;
+      padding-right: 18px;
+    }
+  }
+
+  @media (min-width: 980px) {
+    .ticket-grid {
+      grid-template-columns: repeat(10, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 430px) {
+    .ticket-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .ticket-logo {
+      width: 38%;
+    }
+
+    .barcode {
+      width: 34px;
+      height: 9px;
+    }
+
+    .ticket-label {
+      font-size: 9px;
+    }
+
+    .dock-inner {
+      grid-template-columns: 1fr auto;
+    }
+
+    .dock-inner .pill-btn:nth-of-type(2) {
+      display: none;
+    }
+
+    .stage-controls,
+    .result-actions,
+    .settings-actions,
+    .admin-grid,
+    .admin-count-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .result-main {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      text-align: center;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: .001ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: .001ms !important;
+    }
+  }
+
+  @media print {
+    body {
+      position: static;
+      overflow: visible;
+      background: #fff;
+      color: #000;
+    }
+
+    .ambient,
+    .screen:not(#result-screen),
+    #confettiCanvas,
+    .result-actions,
+    .settings-panel,
+    .pin-panel,
+    .toast {
+      display: none !important;
+    }
+
+    #result-screen {
+      display: block !important;
+      position: static;
+      overflow: visible;
+      color: #000;
+      background: #fff;
+    }
+
+    .result-layout {
+      min-height: auto;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="app-shell" id="app">
+    <div class="bg-miku" aria-hidden="true">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <filter id="mg" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="ms" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <radialGradient id="tg" cx="0.5" cy="0.38" r="0.56">
+            <stop offset="0" stop-color="#00e5d4" stop-opacity="0.16"/>
+            <stop offset="1" stop-color="#00e5d4" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="pg" cx="0.12" cy="0.08" r="0.44">
+            <stop offset="0" stop-color="#ff2d78" stop-opacity="0.14"/>
+            <stop offset="1" stop-color="#ff2d78" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <!-- Dark background base -->
+        <rect width="1000" height="1000" fill="#020b1c"/>
+        <rect width="1000" height="1000" fill="url(#tg)"/>
+        <rect width="1000" height="1000" fill="url(#pg)"/>
+        <!-- Purple glow top-right -->
+        <ellipse cx="870" cy="170" rx="290" ry="210" fill="#4154ff" opacity="0.08" filter="url(#ms)"/>
+
+        <!-- Subtle grid -->
+        <g opacity="0.045" stroke="#7be8ff" stroke-width="0.8">
+          <line x1="100" y1="0" x2="100" y2="1000"/><line x1="200" y1="0" x2="200" y2="1000"/>
+          <line x1="300" y1="0" x2="300" y2="1000"/><line x1="400" y1="0" x2="400" y2="1000"/>
+          <line x1="500" y1="0" x2="500" y2="1000"/><line x1="600" y1="0" x2="600" y2="1000"/>
+          <line x1="700" y1="0" x2="700" y2="1000"/><line x1="800" y1="0" x2="800" y2="1000"/>
+          <line x1="900" y1="0" x2="900" y2="1000"/>
+          <line x1="0" y1="100" x2="1000" y2="100"/><line x1="0" y1="200" x2="1000" y2="200"/>
+          <line x1="0" y1="300" x2="1000" y2="300"/><line x1="0" y1="400" x2="1000" y2="400"/>
+          <line x1="0" y1="500" x2="1000" y2="500"/><line x1="0" y1="600" x2="1000" y2="600"/>
+          <line x1="0" y1="700" x2="1000" y2="700"/><line x1="0" y1="800" x2="1000" y2="800"/>
+          <line x1="0" y1="900" x2="1000" y2="900"/>
+        </g>
+
+        <!-- Vaporwave perspective grid (bottom) -->
+        <g opacity="0.14" stroke="#00e5d4" stroke-width="0.8">
+          <line x1="500" y1="640" x2="0" y2="1000"/>
+          <line x1="500" y1="640" x2="125" y2="1000"/>
+          <line x1="500" y1="640" x2="250" y2="1000"/>
+          <line x1="500" y1="640" x2="375" y2="1000"/>
+          <line x1="500" y1="640" x2="500" y2="1000"/>
+          <line x1="500" y1="640" x2="625" y2="1000"/>
+          <line x1="500" y1="640" x2="750" y2="1000"/>
+          <line x1="500" y1="640" x2="875" y2="1000"/>
+          <line x1="500" y1="640" x2="1000" y2="1000"/>
+          <line x1="0" y1="720" x2="1000" y2="720"/>
+          <line x1="0" y1="796" x2="1000" y2="796"/>
+          <line x1="0" y1="862" x2="1000" y2="862"/>
+          <line x1="0" y1="920" x2="1000" y2="920"/>
+          <line x1="0" y1="968" x2="1000" y2="968"/>
+        </g>
+
+        <!-- ===== DECORATIVE ELEMENTS ===== -->
+
+        <!-- Stars -->
+        <polygon points="85,82 89,96 103,96 92,106 96,120 85,111 74,120 78,106 67,96 81,96"
+          fill="none" stroke="#fff04c" stroke-width="1.5" opacity="0.42"/>
+        <polygon points="918,148 922,160 934,160 925,168 928,180 918,173 908,180 911,168 902,160 914,160"
+          fill="none" stroke="#00e5d4" stroke-width="1.5" opacity="0.5"/>
+        <polygon points="70,848 74,860 86,860 77,868 80,880 70,873 60,880 63,868 54,860 66,860"
+          fill="none" stroke="#ff2d78" stroke-width="1.5" opacity="0.4"/>
+        <polygon points="908,878 912,890 924,890 915,898 918,910 908,903 898,910 901,898 892,890 904,890"
+          fill="none" stroke="#7be8ff" stroke-width="1.5" opacity="0.38"/>
+
+        <!-- Small sparkle dots -->
+        <circle cx="148" cy="388" r="2.5" fill="#00e5d4" opacity="0.55"/>
+        <circle cx="194" cy="165" r="2" fill="#ff2d78" opacity="0.5"/>
+        <circle cx="764" cy="294" r="3" fill="#00e5d4" opacity="0.45"/>
+        <circle cx="894" cy="494" r="2" fill="#fff04c" opacity="0.5"/>
+        <circle cx="126" cy="664" r="2.5" fill="#ff2d78" opacity="0.38"/>
+        <circle cx="864" cy="754" r="2" fill="#7be8ff" opacity="0.42"/>
+        <circle cx="54" cy="340" r="2" fill="#7be8ff" opacity="0.35"/>
+        <circle cx="946" cy="636" r="2" fill="#00e5d4" opacity="0.35"/>
+
+        <!-- Musical notes -->
+        <text x="162" y="470" font-size="40" fill="#ff2d78" opacity="0.18">&#9834;</text>
+        <text x="800" y="366" font-size="32" fill="#00e5d4" opacity="0.16">&#9833;</text>
+        <text x="86" y="736" font-size="26" fill="#7be8ff" opacity="0.14">&#9835;</text>
+        <text x="876" y="686" font-size="34" fill="#ff2d78" opacity="0.15">&#9836;</text>
+
+        <!-- 初音ミク watermark text -->
+        <text x="46" y="960" font-size="52" fill="#00e5d4" opacity="0.05" font-weight="bold">&#21021;&#38899;&#12511;&#12463;</text>
+        <!-- VOCALOID label -->
+        <text x="36" y="50" font-size="13" fill="#7be8ff" opacity="0.12" letter-spacing="7">VOCALOID</text>
+
+        <!-- Circuit board decorations -->
+        <g stroke="#29c7ff" stroke-width="0.8" opacity="0.07" fill="#29c7ff">
+          <path d="M 0,188 L 58,188 L 58,140 L 130,140" fill="none"/>
+          <circle cx="58" cy="188" r="3" stroke="none"/><circle cx="58" cy="140" r="3" stroke="none"/>
+          <path d="M 0,652 L 78,652 L 78,704 L 160,704" fill="none"/>
+          <circle cx="78" cy="652" r="3" stroke="none"/><circle cx="78" cy="704" r="3" stroke="none"/>
+          <path d="M 1000,288 L 946,288 L 946,236 L 876,236" fill="none"/>
+          <circle cx="946" cy="288" r="3" stroke="none"/><circle cx="946" cy="236" r="3" stroke="none"/>
+          <path d="M 1000,754 L 920,754 L 920,806 L 840,806" fill="none"/>
+          <circle cx="920" cy="754" r="3" stroke="none"/><circle cx="920" cy="806" r="3" stroke="none"/>
+        </g>
+      </svg>
+    </div>
+    <div class="ambient" aria-hidden="true"></div>
+
+    <section class="screen is-active" id="grid-screen" aria-label="쿠폰 선택 화면">
+      <header class="topbar">
+        <div class="topbar-main">
+          <div class="brand">
+            <strong id="homeTitleText">KUJI 온라인 경품 뽑기</strong>
+            <span id="homeSubtitleText">쿠폰을 선택하면 슬라이드 오픈 화면으로 이동합니다.</span>
+          </div>
+          <div class="top-actions">
+            <button class="icon-btn" id="randomPickBtn" type="button" title="랜덤 선택">
+              <span class="icon random" aria-hidden="true"></span>
+            </button>
+            <button class="icon-btn" id="settingsBtn" type="button" title="설정 열기">
+              <span class="icon settings" aria-hidden="true"></span>
+            </button>
+          </div>
+        </div>
+        <div class="status-strip" id="statusStrip" aria-label="등급별 당첨 현황"></div>
+      </header>
+
+      <main class="grid-scroll">
+        <div class="ticket-grid" id="ticketGrid"></div>
+      </main>
+
+      <footer class="bottom-dock">
+        <div class="dock-inner">
+          <div class="remaining">
+            <strong id="remainingCount">100</strong>
+            <span id="remainingLabel">남은 쿠폰</span>
+          </div>
+          <button class="pill-btn" id="resetBtn" type="button">새 게임</button>
+          <button class="primary-btn" id="randomPickDockBtn" type="button">랜덤 선택</button>
+        </div>
+      </footer>
+    </section>
+
+    <section class="screen" id="ticket-screen" aria-label="쿠폰 오픈 화면">
+      <div class="play-stage">
+        <div class="stage-copy">
+          <h2 id="openTitleText">왼쪽에서 오른쪽으로 밀어주세요</h2>
+          <p id="openSubtitleText">마찰 지점의 종이가 벗겨집니다. 게이지가 95%를 넘으면 결과가 발표됩니다.</p>
+        </div>
+
+        <div class="coupon-wrap" id="couponWrap">
+          <div class="prize-underlay" id="prizeUnderlay">
+            <div class="under-grade" id="underGrade">?</div>
+            <div class="under-info">
+              <div class="under-rank" id="underRank">결과 대기</div>
+              <div class="under-name" id="underName">쿠폰을 열면 상품이 표시됩니다.</div>
+              <div class="under-small" id="underSmall">선택한 쿠폰의 결과는 이미 확정되어 있습니다.</div>
+            </div>
+          </div>
+          <canvas id="scratchCanvas"></canvas>
+          <canvas id="scratchFxCanvas"></canvas>
+          <div class="tear-light" id="tearLight" aria-hidden="true"></div>
+          <div class="drag-guide" id="dragGuide" aria-hidden="true">
+            <div class="guide-arrow"></div>
+            <div class="guide-track"><div class="guide-fill"></div></div>
+            <div class="guide-text" id="guideText">0%</div>
+          </div>
+        </div>
+
+        <div class="progress-wrap" aria-label="오픈 진행률">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="stage-controls">
+          <button class="ghost-btn" id="backToGridBtn" type="button">돌아가기</button>
+          <button class="primary-btn" id="manualOpenBtn" type="button">쿠폰 오픈</button>
+          <button class="primary-btn" id="autoOpenBtn" type="button">자동 오픈</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="screen" id="reveal-screen" aria-label="결과 발표 화면">
+      <canvas id="revealCanvas"></canvas>
+      <div class="reveal-center">
+        <div class="reveal-letter" id="revealLetter">A</div>
+        <div class="reveal-rank" id="revealRank">A상</div>
+      </div>
+    </section>
+
+    <section class="screen" id="result-screen" aria-label="최종 결과 화면">
+      <div class="result-layout">
+        <h1 class="result-kicker" id="resultTitleText">축하합니다!</h1>
+        <article class="result-card" id="resultCard">
+          <img class="prize-image" id="prizeImage" alt="당첨 상품 이미지">
+          <div class="result-main">
+            <div class="result-badge" id="resultBadge">A</div>
+            <div class="result-copy">
+              <h2 id="resultName">상품명</h2>
+              <p id="resultDesc">상품 설명</p>
+            </div>
+          </div>
+          <div class="voucher-code" id="voucherCode">교환권 코드: -</div>
+        </article>
+        <div class="result-actions">
+          <button class="primary-btn" id="nextDrawBtn" type="button">홈으로 가기</button>
+        </div>
+      </div>
+    </section>
+
+    <canvas id="confettiCanvas"></canvas>
+
+    <aside class="settings-panel" id="settingsPanel" aria-label="설정 패널" aria-hidden="true">
+      <div class="settings-sheet">
+        <div class="settings-head">
+          <h2>관리자 페이지</h2>
+          <button class="icon-btn" id="closeSettingsBtn" type="button" title="설정 닫기">×</button>
+        </div>
+        <p class="settings-help">
+          뽑기 수량, 등급별 당첨 개수, 화면 문구를 설정합니다. 적용하면 현재 쿠폰판은 새로 생성됩니다.
+        </p>
+        <form class="admin-form" id="adminForm">
+          <section class="admin-section">
+            <h3>기본 수량</h3>
+            <label class="admin-field">
+              뽑기(쿠지) 수량
+              <input id="adminTicketCount" type="text" inputmode="numeric" pattern="[0-9]*">
+            </label>
+          </section>
+          <section class="admin-section">
+            <h3>등급별 개수</h3>
+            <div class="admin-count-grid" id="adminGradeFields"></div>
+            <div class="admin-summary" id="adminCountSummary">
+              <span>등급 합계</span>
+              <b>0 / 0</b>
+            </div>
+          </section>
+          <section class="admin-section">
+            <h3>등급별 상품명</h3>
+            <p class="settings-help" style="font-size:11px;margin-bottom:4px">각 등급의 상품명과 설명을 설정합니다. 비워두면 기본값을 사용합니다.</p>
+            <div id="adminProductFields"></div>
+          </section>
+          <section class="admin-section">
+            <h3>화면 문구</h3>
+            <div class="admin-grid">
+              <label class="admin-field">
+                홈 제목
+                <input id="adminHomeTitle" type="text">
+              </label>
+              <label class="admin-field">
+                결과 축하 문구
+                <input id="adminResultTitle" type="text">
+              </label>
+            </div>
+            <label class="admin-field">
+              홈 안내 문구
+              <textarea id="adminHomeSubtitle"></textarea>
+            </label>
+            <label class="admin-field">
+              오픈 화면 제목
+              <input id="adminOpenTitle" type="text">
+            </label>
+            <label class="admin-field">
+              오픈 안내 문구
+              <textarea id="adminOpenSubtitle"></textarea>
+            </label>
+          </section>
+        </form>
+        <div class="settings-actions">
+          <button class="ghost-btn" id="defaultConfigBtn" type="button">기본값</button>
+          <button class="ghost-btn" id="cancelSettingsBtn" type="button">취소</button>
+          <button class="primary-btn" id="applyConfigBtn" type="button">적용</button>
+        </div>
+      </div>
+    </aside>
+
+    <aside class="pin-panel" id="resetPinPanel" aria-label="관리자 비밀번호 입력" aria-hidden="true">
+      <div class="pin-card">
+        <div class="pin-head">
+          <h2 id="resetPinTitle">관리자 확인</h2>
+          <button class="icon-btn" id="closeResetPinBtn" type="button" title="닫기">×</button>
+        </div>
+        <p class="pin-help" id="resetPinHelp">새 쿠폰판을 생성하려면 관리자 비밀번호 4자리를 입력하세요.</p>
+        <div class="pin-dots" id="resetPinDots" aria-label="비밀번호 입력 상태"></div>
+        <div class="pin-error" id="resetPinError">비밀번호가 일치하지 않습니다.</div>
+        <div class="pin-pad" aria-label="숫자 키패드">
+          <button class="pin-key" type="button" data-pin-digit="1">1</button>
+          <button class="pin-key" type="button" data-pin-digit="2">2</button>
+          <button class="pin-key" type="button" data-pin-digit="3">3</button>
+          <button class="pin-key" type="button" data-pin-digit="4">4</button>
+          <button class="pin-key" type="button" data-pin-digit="5">5</button>
+          <button class="pin-key" type="button" data-pin-digit="6">6</button>
+          <button class="pin-key" type="button" data-pin-digit="7">7</button>
+          <button class="pin-key" type="button" data-pin-digit="8">8</button>
+          <button class="pin-key" type="button" data-pin-digit="9">9</button>
+          <span aria-hidden="true"></span>
+          <button class="pin-key" type="button" data-pin-digit="0">0</button>
+          <button class="pin-key" id="resetPinDeleteBtn" type="button" title="한 자리 삭제">←</button>
+        </div>
+        <div class="pin-actions">
+          <button class="ghost-btn" id="resetPinClearBtn" type="button">지우기</button>
+          <button class="primary-btn" id="resetPinSubmitBtn" type="button">확인</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  const STORAGE_KEY = "kuji:v2:state";
+  const CONFIG_KEY = "kuji:v2:config";
+  const TRIGGER_FALLBACK = .95;
+  const DPR_MAX = 2;
+  const ADMIN_PIN = "1012";
+
+  const GRADE_META = {
+    A: { rank: "A상", label: "최고 등급", color: "#fff04c", tone: "#ff8a1f" },
+    B: { rank: "B상", label: "스페셜", color: "#ff4f7b", tone: "#ff8a1f" },
+    C: { rank: "C상", label: "레어", color: "#8a7cff", tone: "#29c7ff" },
+    D: { rank: "D상", label: "굿", color: "#29c7ff", tone: "#7be8ff" },
+    E: { rank: "E상", label: "베이직", color: "#37f2a3", tone: "#29c7ff" },
+    F: { rank: "F상", label: "참가상", color: "#b6c4d8", tone: "#ff8a1f" }
+  };
+
+  const DEFAULT_PRODUCTS = [
+    { id: "A-001", grade: "A", name: "프리미엄 게이밍 노트북", desc: "최고 등급 한정 경품입니다.", imageLabel: "GAMING LAPTOP", accent: "#fff04c" },
+    { id: "A-002", grade: "A", name: "플래그십 스마트폰", desc: "최신형 스마트폰 교환권입니다.", imageLabel: "SMART PHONE", accent: "#fff04c" },
+    { id: "A-003", grade: "A", name: "4K OLED 모니터", desc: "몰입형 디스플레이 경품입니다.", imageLabel: "OLED DISPLAY", accent: "#fff04c" },
+    { id: "A-004", grade: "A", name: "하이엔드 태블릿 세트", desc: "펜과 키보드가 포함된 세트입니다.", imageLabel: "TABLET SET", accent: "#fff04c" },
+    { id: "B-001", grade: "B", name: "무선 헤드폰 Pro", desc: "노이즈 캔슬링 헤드폰입니다.", imageLabel: "HEADPHONE", accent: "#ff4f7b" },
+    { id: "B-002", grade: "B", name: "스마트 워치", desc: "운동 기록과 알림을 지원합니다.", imageLabel: "SMART WATCH", accent: "#ff4f7b" },
+    { id: "B-003", grade: "B", name: "콘솔 게임기", desc: "거실용 엔터테인먼트 경품입니다.", imageLabel: "GAME CONSOLE", accent: "#ff4f7b" },
+    { id: "B-004", grade: "B", name: "액션 카메라", desc: "여행과 스포츠 촬영에 적합합니다.", imageLabel: "ACTION CAM", accent: "#ff4f7b" },
+    { id: "B-005", grade: "B", name: "프리미엄 키보드", desc: "알루미늄 바디 기계식 키보드입니다.", imageLabel: "KEYBOARD", accent: "#ff4f7b" },
+    { id: "B-006", grade: "B", name: "무선 이어버드", desc: "휴대용 충전 케이스가 포함됩니다.", imageLabel: "EARBUDS", accent: "#ff4f7b" },
+    { id: "B-007", grade: "B", name: "로봇 청소기", desc: "스마트 매핑 기능을 제공합니다.", imageLabel: "ROBOT CLEAN", accent: "#ff4f7b" },
+    { id: "B-008", grade: "B", name: "전자책 리더기", desc: "눈이 편한 독서용 디바이스입니다.", imageLabel: "E-READER", accent: "#ff4f7b" },
+    { id: "C-001", grade: "C", name: "블루투스 스피커", desc: "강한 저음의 휴대용 스피커입니다.", imageLabel: "SPEAKER", accent: "#8a7cff" },
+    { id: "C-002", grade: "C", name: "스마트 조명 세트", desc: "앱으로 색상을 제어할 수 있습니다.", imageLabel: "LIGHT KIT", accent: "#8a7cff" },
+    { id: "C-003", grade: "C", name: "고속 충전 도킹 스테이션", desc: "여러 기기를 동시에 충전합니다.", imageLabel: "CHARGE DOCK", accent: "#8a7cff" },
+    { id: "C-004", grade: "C", name: "게이밍 마우스", desc: "고정밀 센서와 매크로 버튼을 제공합니다.", imageLabel: "MOUSE", accent: "#8a7cff" },
+    { id: "C-005", grade: "C", name: "캡슐 커피 머신", desc: "작은 공간에 어울리는 커피 머신입니다.", imageLabel: "COFFEE", accent: "#8a7cff" },
+    { id: "C-006", grade: "C", name: "미니 빔프로젝터", desc: "간편한 홈시네마 경품입니다.", imageLabel: "PROJECTOR", accent: "#8a7cff" },
+    { id: "C-007", grade: "C", name: "스마트 체중계", desc: "체성분 측정을 지원합니다.", imageLabel: "SMART SCALE", accent: "#8a7cff" },
+    { id: "C-008", grade: "C", name: "웹캠 스트리밍 세트", desc: "화상 회의와 방송용 세트입니다.", imageLabel: "WEBCAM KIT", accent: "#8a7cff" },
+    { id: "C-009", grade: "C", name: "무선 충전 패드", desc: "책상 위에 어울리는 충전 패드입니다.", imageLabel: "WIRELESS PAD", accent: "#8a7cff" },
+    { id: "C-010", grade: "C", name: "휴대용 SSD 1TB", desc: "빠른 전송 속도의 외장 저장장치입니다.", imageLabel: "SSD 1TB", accent: "#8a7cff" },
+    { id: "C-011", grade: "C", name: "프리미엄 보조배터리", desc: "대용량 고속 충전을 지원합니다.", imageLabel: "POWER BANK", accent: "#8a7cff" },
+    { id: "C-012", grade: "C", name: "스탠딩 데스크 램프", desc: "눈부심이 적은 데스크 조명입니다.", imageLabel: "DESK LAMP", accent: "#8a7cff" },
+    { id: "C-013", grade: "C", name: "디지털 액자", desc: "사진을 자동 슬라이드로 보여줍니다.", imageLabel: "PHOTO FRAME", accent: "#8a7cff" },
+    { id: "C-014", grade: "C", name: "휴대용 마사지건", desc: "운동 후 회복에 좋은 경품입니다.", imageLabel: "MASSAGER", accent: "#8a7cff" },
+    { id: "D-001", grade: "D", name: "편의점 상품권 5만원", desc: "전국 제휴 매장에서 사용할 수 있습니다.", imageLabel: "GIFT 50K", accent: "#29c7ff" },
+    { id: "D-002", grade: "D", name: "문화상품권 5만원", desc: "도서와 콘텐츠 구매에 사용할 수 있습니다.", imageLabel: "CULTURE 50K", accent: "#29c7ff" },
+    { id: "D-003", grade: "D", name: "영화 관람권 2매", desc: "주말에도 사용할 수 있는 관람권입니다.", imageLabel: "MOVIE TICKET", accent: "#29c7ff" },
+    { id: "D-004", grade: "D", name: "배달 앱 쿠폰 3만원", desc: "원하는 메뉴에 사용할 수 있습니다.", imageLabel: "FOOD COUPON", accent: "#29c7ff" },
+    { id: "D-005", grade: "D", name: "카페 금액권 3만원", desc: "음료와 디저트 교환에 적합합니다.", imageLabel: "CAFE 30K", accent: "#29c7ff" },
+    { id: "D-006", grade: "D", name: "게임 캐시 3만원", desc: "제휴 게임 충전에 사용할 수 있습니다.", imageLabel: "GAME CASH", accent: "#29c7ff" },
+    { id: "D-007", grade: "D", name: "캐릭터 피규어", desc: "랜덤 디자인으로 제공됩니다.", imageLabel: "FIGURE", accent: "#29c7ff" },
+    { id: "D-008", grade: "D", name: "스포츠 타월 세트", desc: "흡수력이 좋은 프리미엄 타월입니다.", imageLabel: "TOWEL SET", accent: "#29c7ff" },
+    { id: "D-009", grade: "D", name: "텀블러 세트", desc: "보온과 보냉을 지원합니다.", imageLabel: "TUMBLER", accent: "#29c7ff" },
+    { id: "D-010", grade: "D", name: "데스크 매트", desc: "넓고 안정적인 작업 공간을 만듭니다.", imageLabel: "DESK MAT", accent: "#29c7ff" },
+    { id: "D-011", grade: "D", name: "멀티 허브", desc: "노트북 확장 포트로 활용됩니다.", imageLabel: "USB HUB", accent: "#29c7ff" },
+    { id: "D-012", grade: "D", name: "차량용 충전기", desc: "차 안에서도 고속 충전이 가능합니다.", imageLabel: "CAR CHARGE", accent: "#29c7ff" },
+    { id: "D-013", grade: "D", name: "스마트폰 거치대", desc: "책상과 침대에서 편하게 사용합니다.", imageLabel: "PHONE STAND", accent: "#29c7ff" },
+    { id: "D-014", grade: "D", name: "노트북 파우치", desc: "13~15인치 기기를 보호합니다.", imageLabel: "LAPTOP CASE", accent: "#29c7ff" },
+    { id: "D-015", grade: "D", name: "휴대용 선풍기", desc: "작고 강한 바람을 제공합니다.", imageLabel: "MINI FAN", accent: "#29c7ff" },
+    { id: "D-016", grade: "D", name: "무드등", desc: "은은한 조명 효과를 제공합니다.", imageLabel: "MOOD LIGHT", accent: "#29c7ff" },
+    { id: "D-017", grade: "D", name: "보드게임 세트", desc: "가족과 친구가 함께 즐길 수 있습니다.", imageLabel: "BOARD GAME", accent: "#29c7ff" },
+    { id: "D-018", grade: "D", name: "미니 공구 키트", desc: "간단한 수리에 유용합니다.", imageLabel: "TOOL KIT", accent: "#29c7ff" },
+    { id: "D-019", grade: "D", name: "프리미엄 양말 세트", desc: "데일리용 구성입니다.", imageLabel: "SOCKS SET", accent: "#29c7ff" },
+    { id: "D-020", grade: "D", name: "무선 마우스", desc: "휴대하기 좋은 조용한 마우스입니다.", imageLabel: "WIRELESS MOUSE", accent: "#29c7ff" },
+    { id: "E-001", grade: "E", name: "카페 아메리카노 쿠폰", desc: "가볍게 즐기는 음료 쿠폰입니다.", imageLabel: "COFFEE", accent: "#37f2a3" },
+    { id: "E-002", grade: "E", name: "아이스티 쿠폰", desc: "상큼한 음료 교환권입니다.", imageLabel: "ICE TEA", accent: "#37f2a3" },
+    { id: "E-003", grade: "E", name: "도넛 교환권", desc: "간식으로 좋은 도넛 쿠폰입니다.", imageLabel: "DONUT", accent: "#37f2a3" },
+    { id: "E-004", grade: "E", name: "아이스크림 쿠폰", desc: "제휴 매장에서 교환 가능합니다.", imageLabel: "ICE CREAM", accent: "#37f2a3" },
+    { id: "E-005", grade: "E", name: "편의점 1만원권", desc: "간편하게 사용할 수 있습니다.", imageLabel: "STORE 10K", accent: "#37f2a3" },
+    { id: "E-006", grade: "E", name: "스낵 박스", desc: "인기 과자 랜덤 박스입니다.", imageLabel: "SNACK BOX", accent: "#37f2a3" },
+    { id: "E-007", grade: "E", name: "캐릭터 키링", desc: "랜덤 캐릭터 키링입니다.", imageLabel: "KEY RING", accent: "#37f2a3" },
+    { id: "E-008", grade: "E", name: "스티커 팩", desc: "다꾸와 노트 꾸미기에 좋습니다.", imageLabel: "STICKER", accent: "#37f2a3" },
+    { id: "E-009", grade: "E", name: "메모 패드", desc: "업무와 학습에 쓰기 좋습니다.", imageLabel: "MEMO PAD", accent: "#37f2a3" },
+    { id: "E-010", grade: "E", name: "볼펜 세트", desc: "부드러운 필기감을 제공합니다.", imageLabel: "PEN SET", accent: "#37f2a3" },
+    { id: "E-011", grade: "E", name: "마스킹 테이프", desc: "꾸미기용 랜덤 테이프입니다.", imageLabel: "MASKING TAPE", accent: "#37f2a3" },
+    { id: "E-012", grade: "E", name: "핸드크림", desc: "휴대하기 좋은 사이즈입니다.", imageLabel: "HAND CREAM", accent: "#37f2a3" },
+    { id: "E-013", grade: "E", name: "립밤", desc: "사계절 필수 케어 아이템입니다.", imageLabel: "LIP BALM", accent: "#37f2a3" },
+    { id: "E-014", grade: "E", name: "휴대용 티슈 세트", desc: "가방에 넣기 좋은 구성입니다.", imageLabel: "TISSUE", accent: "#37f2a3" },
+    { id: "E-015", grade: "E", name: "미니 퍼즐", desc: "짧은 시간 즐기기 좋은 퍼즐입니다.", imageLabel: "PUZZLE", accent: "#37f2a3" },
+    { id: "E-016", grade: "E", name: "캔디 파우치", desc: "달콤한 랜덤 캔디 구성입니다.", imageLabel: "CANDY", accent: "#37f2a3" },
+    { id: "E-017", grade: "E", name: "젤리 박스", desc: "인기 젤리 랜덤 구성입니다.", imageLabel: "JELLY", accent: "#37f2a3" },
+    { id: "E-018", grade: "E", name: "탄산음료 쿠폰", desc: "시원한 음료 교환권입니다.", imageLabel: "SODA", accent: "#37f2a3" },
+    { id: "E-019", grade: "E", name: "라면 교환권", desc: "편의점에서 교환 가능합니다.", imageLabel: "NOODLE", accent: "#37f2a3" },
+    { id: "E-020", grade: "E", name: "치킨 할인권", desc: "제휴 매장에서 사용할 수 있습니다.", imageLabel: "CHICKEN", accent: "#37f2a3" },
+    { id: "E-021", grade: "E", name: "피자 할인권", desc: "배달 주문에 사용 가능합니다.", imageLabel: "PIZZA", accent: "#37f2a3" },
+    { id: "E-022", grade: "E", name: "포토카드 팩", desc: "랜덤 디자인으로 제공됩니다.", imageLabel: "PHOTO CARD", accent: "#37f2a3" },
+    { id: "E-023", grade: "E", name: "카드 지갑", desc: "가볍게 들고 다니기 좋습니다.", imageLabel: "CARD WALLET", accent: "#37f2a3" },
+    { id: "E-024", grade: "E", name: "케이블 정리 클립", desc: "책상 위 선 정리에 유용합니다.", imageLabel: "CABLE CLIP", accent: "#37f2a3" },
+    { id: "F-001", grade: "F", name: "참가 감사 포인트 100P", desc: "다음 이벤트에 사용할 수 있습니다.", imageLabel: "100 POINT", accent: "#b6c4d8" },
+    { id: "F-002", grade: "F", name: "참가 감사 포인트 200P", desc: "소소하지만 확실한 리워드입니다.", imageLabel: "200 POINT", accent: "#b6c4d8" },
+    { id: "F-003", grade: "F", name: "랜덤 배지", desc: "작은 수집형 배지입니다.", imageLabel: "BADGE", accent: "#b6c4d8" },
+    { id: "F-004", grade: "F", name: "랜덤 엽서", desc: "기념용 일러스트 엽서입니다.", imageLabel: "POSTCARD", accent: "#b6c4d8" },
+    { id: "F-005", grade: "F", name: "디지털 배경화면", desc: "다운로드형 리워드입니다.", imageLabel: "WALLPAPER", accent: "#b6c4d8" },
+    { id: "F-006", grade: "F", name: "쿠폰 재도전권 1장", desc: "별도 이벤트에서 사용할 수 있습니다.", imageLabel: "RETRY PASS", accent: "#b6c4d8" },
+    { id: "F-007", grade: "F", name: "미니 스티커 1장", desc: "랜덤 디자인 스티커입니다.", imageLabel: "MINI STICKER", accent: "#b6c4d8" },
+    { id: "F-008", grade: "F", name: "캔디 1개", desc: "현장 수령용 작은 간식입니다.", imageLabel: "CANDY ONE", accent: "#b6c4d8" },
+    { id: "F-009", grade: "F", name: "초콜릿 1개", desc: "달콤한 참가상입니다.", imageLabel: "CHOCOLATE", accent: "#b6c4d8" },
+    { id: "F-010", grade: "F", name: "생수 교환권", desc: "현장 제휴 부스에서 교환합니다.", imageLabel: "WATER", accent: "#b6c4d8" },
+    { id: "F-011", grade: "F", name: "껌 교환권", desc: "작은 간식 쿠폰입니다.", imageLabel: "GUM", accent: "#b6c4d8" },
+    { id: "F-012", grade: "F", name: "랜덤 문구 1종", desc: "펜, 클립, 메모지 중 랜덤입니다.", imageLabel: "STATIONERY", accent: "#b6c4d8" },
+    { id: "F-013", grade: "F", name: "종이 책갈피", desc: "기념 디자인 책갈피입니다.", imageLabel: "BOOKMARK", accent: "#b6c4d8" },
+    { id: "F-014", grade: "F", name: "응원 메시지 카드", desc: "랜덤 문구가 담긴 카드입니다.", imageLabel: "MESSAGE", accent: "#b6c4d8" },
+    { id: "F-015", grade: "F", name: "다음 구매 3% 할인", desc: "온라인 스토어에서 사용 가능합니다.", imageLabel: "3% OFF", accent: "#b6c4d8" },
+    { id: "F-016", grade: "F", name: "다음 구매 5% 할인", desc: "이벤트 기간 내 사용 가능합니다.", imageLabel: "5% OFF", accent: "#b6c4d8" },
+    { id: "F-017", grade: "F", name: "랜덤 이미지 카드", desc: "디지털 카드 리워드입니다.", imageLabel: "IMAGE CARD", accent: "#b6c4d8" },
+    { id: "F-018", grade: "F", name: "미니 메모 1권", desc: "휴대용 작은 노트입니다.", imageLabel: "MINI MEMO", accent: "#b6c4d8" },
+    { id: "F-019", grade: "F", name: "음료 할인권", desc: "제휴 카페에서 사용할 수 있습니다.", imageLabel: "DRINK OFF", accent: "#b6c4d8" },
+    { id: "F-020", grade: "F", name: "스낵 할인권", desc: "간식 구매 시 사용 가능합니다.", imageLabel: "SNACK OFF", accent: "#b6c4d8" },
+    { id: "F-021", grade: "F", name: "랜덤 컬러펜 1개", desc: "색상은 랜덤으로 제공됩니다.", imageLabel: "COLOR PEN", accent: "#b6c4d8" },
+    { id: "F-022", grade: "F", name: "미니 자석", desc: "작은 수집형 자석입니다.", imageLabel: "MAGNET", accent: "#b6c4d8" },
+    { id: "F-023", grade: "F", name: "랜덤 씰 스티커", desc: "다꾸용 씰 스티커입니다.", imageLabel: "SEAL", accent: "#b6c4d8" },
+    { id: "F-024", grade: "F", name: "포인트 300P", desc: "누적해서 사용할 수 있는 포인트입니다.", imageLabel: "300 POINT", accent: "#b6c4d8" },
+    { id: "F-025", grade: "F", name: "응모권 1장", desc: "추첨 이벤트 참여권입니다.", imageLabel: "ENTRY PASS", accent: "#b6c4d8" },
+    { id: "F-026", grade: "F", name: "랜덤 사탕 세트", desc: "작은 사탕 묶음입니다.", imageLabel: "SWEET SET", accent: "#b6c4d8" },
+    { id: "F-027", grade: "F", name: "디지털 쿠폰 500원", desc: "온라인 결제 시 사용할 수 있습니다.", imageLabel: "500 WON", accent: "#b6c4d8" },
+    { id: "F-028", grade: "F", name: "현장 포토존 이용권", desc: "이벤트 포토존에서 사용합니다.", imageLabel: "PHOTO ZONE", accent: "#b6c4d8" },
+    { id: "F-029", grade: "F", name: "랜덤 미니 카드", desc: "기념용 미니 카드입니다.", imageLabel: "MINI CARD", accent: "#b6c4d8" },
+    { id: "F-030", grade: "F", name: "감사 쿠폰", desc: "참여해 주셔서 감사합니다.", imageLabel: "THANK YOU", accent: "#b6c4d8" }
+  ];
+
+  const DEFAULT_CONFIG = {
+    ticketCount: 100,
+    triggerProgress: .95,
+    autoOpenDuration: 1550,
+    copy: {
+      homeTitle: "KUJI 온라인 경품 뽑기",
+      homeSubtitle: "쿠폰을 선택하면 슬라이드 오픈 화면으로 이동합니다.",
+      openTitle: "왼쪽에서 오른쪽으로 밀어주세요",
+      openSubtitle: "마찰 지점의 종이가 벗겨집니다. 게이지가 95%를 넘으면 결과가 발표됩니다.",
+      resultTitle: "축하합니다!"
+    },
+    gradeCounts: { A: 1, B: 4, C: 10, D: 18, E: 27, F: 40 },
+    gradeRates: { A: 1, B: 4, C: 10, D: 18, E: 27, F: 40 },
+    products: DEFAULT_PRODUCTS
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const gradeOrder = Object.keys(GRADE_META);
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function randomOf(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  let config = loadConfig();
+  let state = {
+    tickets: [],
+    selectedIndex: null,
+    currentResult: null
+  };
+
+  let scratch = {
+    canvas: null,
+    ctx: null,
+    fxCanvas: null,
+    fxCtx: null,
+    wrap: null,
+    width: 0,
+    height: 0,
+    dpr: 1,
+    progress: 0,
+    dragging: false,
+    complete: false,
+    autoOpening: false,
+    lastPoint: null,
+    raf: 0,
+    fxRaf: 0,
+    particles: []
+  };
+
+  let revealRaf = 0;
+  let confettiRaf = 0;
+  let toastTimer = 0;
+  let resetPinInput = "";
+  let adminPinMode = "reset";
+
+  function loadConfig() {
+    const external = window.KUJI_CONFIG && typeof window.KUJI_CONFIG === "object" ? window.KUJI_CONFIG : null;
+    const saved = safeParse(localStorage.getItem(CONFIG_KEY));
+    return sanitizeConfig(saved || external || {});
+  }
+
+  function sanitizeConfig(raw) {
+    const merged = deepMerge(DEFAULT_CONFIG, raw || {});
+    merged.ticketCount = clamp(Number(merged.ticketCount) || 100, 1, 300);
+    merged.triggerProgress = clamp(Number(merged.triggerProgress) || TRIGGER_FALLBACK, .5, 1);
+    merged.autoOpenDuration = clamp(Number(merged.autoOpenDuration) || 1550, 450, 6000);
+    merged.copy = {
+      ...DEFAULT_CONFIG.copy,
+      ...(merged.copy && typeof merged.copy === "object" ? merged.copy : {})
+    };
+    merged.gradeRates = gradeOrder.reduce((acc, grade) => {
+      acc[grade] = Math.max(0, Number(merged.gradeRates && merged.gradeRates[grade]) || 0);
+      return acc;
+    }, {});
+    if (!Object.values(merged.gradeRates).some(Boolean)) {
+      merged.gradeRates = { ...DEFAULT_CONFIG.gradeRates };
+    }
+    const hasExplicitCounts = !!(raw && raw.gradeCounts && typeof raw.gradeCounts === "object");
+    merged.gradeCounts = hasExplicitCounts
+      ? readGradeCounts(raw.gradeCounts)
+      : buildGradeCountsFromRates(merged.gradeRates, merged.ticketCount);
+    merged.gradeCounts = normalizeGradeCounts(merged.gradeCounts, merged.ticketCount);
+    merged.gradeRates = { ...merged.gradeCounts };
+    merged.products = Array.isArray(merged.products) && merged.products.length ? merged.products : DEFAULT_PRODUCTS;
+    merged.products = merged.products
+      .filter((product) => product && GRADE_META[product.grade])
+      .map((product, index) => ({
+        id: String(product.id || `${product.grade}-${String(index + 1).padStart(3, "0")}`),
+        grade: product.grade,
+        name: String(product.name || `${product.grade}상 상품`),
+        desc: String(product.desc || GRADE_META[product.grade].label),
+        image: product.image ? String(product.image) : "",
+        imageLabel: String(product.imageLabel || product.name || `${product.grade} PRIZE`),
+        accent: String(product.accent || GRADE_META[product.grade].color)
+      }));
+    return merged;
+  }
+
+  function readGradeCounts(source) {
+    return gradeOrder.reduce((acc, grade) => {
+      acc[grade] = Math.max(0, Math.floor(Number(source && source[grade]) || 0));
+      return acc;
+    }, {});
+  }
+
+  function buildGradeCountsFromRates(rates, total) {
+    const target = Math.max(1, Math.floor(Number(total) || 1));
+    const weights = gradeOrder.map((grade) => Math.max(0, Number(rates && rates[grade]) || 0));
+    const weightTotal = weights.reduce((sum, weight) => sum + weight, 0);
+    if (!weightTotal) return normalizeGradeCounts(readGradeCounts(DEFAULT_CONFIG.gradeCounts), target);
+
+    const rawCounts = weights.map((weight) => (weight / weightTotal) * target);
+    const counts = {};
+    let used = 0;
+    gradeOrder.forEach((grade, index) => {
+      counts[grade] = Math.floor(rawCounts[index]);
+      used += counts[grade];
+    });
+
+    const fractions = gradeOrder
+      .map((grade, index) => ({ grade, fraction: rawCounts[index] - Math.floor(rawCounts[index]) }))
+      .sort((a, b) => b.fraction - a.fraction);
+
+    for (let i = 0; used < target; i++) {
+      counts[fractions[i % fractions.length].grade] += 1;
+      used += 1;
+    }
+
+    return counts;
+  }
+
+  function normalizeGradeCounts(counts, total) {
+    const normalized = readGradeCounts(counts);
+    const target = Math.max(1, Math.floor(Number(total) || 1));
+    let sum = gradeOrder.reduce((acc, grade) => acc + normalized[grade], 0);
+
+    if (sum < target) {
+      normalized.F += target - sum;
+      return normalized;
+    }
+
+    if (sum > target) {
+      let diff = sum - target;
+      [...gradeOrder].reverse().forEach((grade) => {
+        if (!diff) return;
+        const remove = Math.min(normalized[grade], diff);
+        normalized[grade] -= remove;
+        diff -= remove;
+      });
+    }
+
+    return normalized;
+  }
+
+  function deepMerge(base, patch) {
+    if (!patch || typeof patch !== "object") return structuredCloneSafe(base);
+    const output = Array.isArray(base) ? [...base] : { ...base };
+    Object.keys(patch).forEach((key) => {
+      if (Array.isArray(patch[key])) {
+        output[key] = patch[key].map((item) => item && typeof item === "object" ? { ...item } : item);
+      } else if (patch[key] && typeof patch[key] === "object" && base[key] && typeof base[key] === "object" && !Array.isArray(base[key])) {
+        output[key] = deepMerge(base[key], patch[key]);
+      } else {
+        output[key] = patch[key];
+      }
+    });
+    return output;
+  }
+
+  function structuredCloneSafe(value) {
+    return JSON.parse(JSON.stringify(value));
+  }
+
+  function safeParse(text) {
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch {
+      return null;
+    }
+  }
+
+  function init() {
+    bindEvents();
+    const savedState = safeParse(localStorage.getItem(STORAGE_KEY));
+    if (savedState && Array.isArray(savedState.tickets) && savedState.tickets.length === config.ticketCount) {
+      state.tickets = savedState.tickets;
+    } else {
+      resetTickets();
+    }
+    renderAll();
+  }
+
+  function resetTickets() {
+    const gradeDeck = buildGradeDeck();
+    state.tickets = gradeDeck.map((grade, index) => {
+      const prize = pickPrize(grade);
+      return {
+        id: `T-${String(index + 1).padStart(3, "0")}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
+        index,
+        used: false,
+        prize,
+        voucherCode: createVoucherCode(index, prize.grade)
+      };
+    });
+    state.selectedIndex = null;
+    state.currentResult = null;
+    saveState();
+  }
+
+  function buildGradeDeck() {
+    const deck = [];
+    gradeOrder.forEach((grade) => {
+      for (let i = 0; i < config.gradeCounts[grade]; i++) {
+        deck.push(grade);
+      }
+    });
+
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+
+    return deck;
+  }
+
+  function pickPrize(grade) {
+    const pool = config.products.filter((product) => product.grade === grade);
+    const fallback = config.products.find((product) => product.grade === grade) || DEFAULT_PRODUCTS.find((product) => product.grade === grade);
+    return structuredCloneSafe(randomOf(pool.length ? pool : [fallback]));
+  }
+
+  function createVoucherCode(index, grade) {
+    const block = Math.random().toString(36).slice(2, 8).toUpperCase();
+    return `KUJI-${grade}${String(index + 1).padStart(3, "0")}-${block}`;
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ tickets: state.tickets }));
+  }
+
+  function renderAll() {
+    renderCopy();
+    renderStatus();
+    renderGrid();
+    updateRemaining();
+    populateAdminForm();
+  }
+
+  function renderCopy() {
+    $("homeTitleText").textContent = config.copy.homeTitle;
+    $("homeSubtitleText").textContent = config.copy.homeSubtitle;
+    $("openTitleText").textContent = config.copy.openTitle;
+    $("openSubtitleText").textContent = config.copy.openSubtitle;
+    $("resultTitleText").textContent = config.copy.resultTitle;
+    document.title = config.copy.homeTitle;
+  }
+
+  function renderStatus() {
+    const strip = $("statusStrip");
+    const wonCounts = gradeOrder.reduce((acc, grade) => {
+      acc[grade] = state.tickets.filter((ticket) => ticket.used && ticket.prize.grade === grade).length;
+      return acc;
+    }, {});
+
+    strip.innerHTML = gradeOrder.map((grade) => {
+      const meta = GRADE_META[grade];
+      return `
+        <div class="grade-chip" style="--grade-color:${meta.color}">
+          <b>${grade}</b>
+          <span>${wonCounts[grade]}/${config.gradeCounts[grade]}개</span>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderGrid() {
+    const grid = $("ticketGrid");
+    grid.innerHTML = "";
+    const fragment = document.createDocumentFragment();
+
+    state.tickets.forEach((ticket, index) => {
+      const meta = GRADE_META[ticket.prize.grade];
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `ticket${ticket.used ? " is-used" : ""}`;
+      button.style.setProperty("--grade-color", meta.color);
+      button.setAttribute("aria-label", ticket.used ? `${index + 1}번 쿠폰, ${meta.rank} 당첨 완료` : `${index + 1}번 쿠폰 열기`);
+      button.dataset.index = String(index);
+      button.innerHTML = `
+        <div class="ticket-body">
+          <span class="ticket-no">#${String(index + 1).padStart(3, "0")}</span>
+          <span class="ticket-logo">${ticket.used ? ticket.prize.grade : "KUJI"}</span>
+          <span class="ticket-label">${ticket.used ? "OPENED" : "SECRET"}</span>
+          <span class="barcode" aria-hidden="true">${barcodeBars(index)}</span>
+        </div>
+      `;
+      button.disabled = ticket.used;
+      button.addEventListener("click", () => {
+        if (!ticket.used) openTicket(index);
+      });
+      fragment.appendChild(button);
+    });
+
+    grid.appendChild(fragment);
+  }
+
+  function barcodeBars(seed) {
+    return Array.from({ length: 12 }, (_, i) => {
+      const h = 4 + ((seed + i * 7) % 8);
+      return `<i style="height:${h}px"></i>`;
+    }).join("");
+  }
+
+  function updateRemaining() {
+    const remaining = state.tickets.filter((ticket) => !ticket.used).length;
+    $("remainingCount").textContent = String(remaining);
+    $("remainingLabel").textContent = remaining ? "남은 쿠폰" : "모든 쿠폰 완료";
+    $("randomPickBtn").disabled = remaining === 0;
+    $("randomPickDockBtn").disabled = remaining === 0;
+  }
+
+  function openTicket(index) {
+    const ticket = state.tickets[index];
+    if (!ticket || ticket.used) return;
+    state.selectedIndex = index;
+    state.currentResult = ticket;
+    const meta = GRADE_META[ticket.prize.grade];
+    $("prizeUnderlay").style.setProperty("--grade-color", meta.color);
+    $("underGrade").textContent = ticket.prize.grade;
+    $("underRank").textContent = `${meta.rank} · ${meta.label}`;
+    $("underName").textContent = ticket.prize.name;
+    $("underSmall").textContent = `교환권 코드 ${ticket.voucherCode}`;
+    showScreen("ticket-screen");
+    requestAnimationFrame(() => prepareScratch(ticket));
+  }
+
+  function showScreen(screenId) {
+    document.querySelectorAll(".screen").forEach((screen) => {
+      screen.classList.toggle("is-active", screen.id === screenId);
+    });
+  }
+
+  function prepareScratch(ticket) {
+    stopScratchLoops();
+    scratch.canvas = $("scratchCanvas");
+    scratch.ctx = scratch.canvas.getContext("2d", { willReadFrequently: false });
+    scratch.fxCanvas = $("scratchFxCanvas");
+    scratch.fxCtx = scratch.fxCanvas.getContext("2d");
+    scratch.wrap = $("couponWrap");
+    scratch.progress = 0;
+    scratch.dragging = false;
+    scratch.complete = false;
+    scratch.autoOpening = false;
+    scratch.lastPoint = null;
+    scratch.particles = [];
+    setProgress(0);
+    resizeScratchCanvas();
+    drawScratchSurface(ticket);
+    startFxLoop();
+  }
+
+  function resizeScratchCanvas() {
+    const rect = scratch.wrap.getBoundingClientRect();
+    scratch.dpr = Math.min(window.devicePixelRatio || 1, DPR_MAX);
+    scratch.width = Math.max(1, Math.round(rect.width));
+    scratch.height = Math.max(1, Math.round(rect.height));
+    [scratch.canvas, scratch.fxCanvas].forEach((canvas) => {
+      canvas.width = Math.round(scratch.width * scratch.dpr);
+      canvas.height = Math.round(scratch.height * scratch.dpr);
+      canvas.style.width = `${scratch.width}px`;
+      canvas.style.height = `${scratch.height}px`;
+    });
+    scratch.ctx.setTransform(scratch.dpr, 0, 0, scratch.dpr, 0, 0);
+    scratch.fxCtx.setTransform(scratch.dpr, 0, 0, scratch.dpr, 0, 0);
+  }
+
+  function drawScratchSurface(ticket) {
+    const ctx = scratch.ctx;
+    const w = scratch.width;
+    const h = scratch.height;
+    ctx.globalCompositeOperation = "source-over";
+    ctx.clearRect(0, 0, w, h);
+
+    const gradient = ctx.createLinearGradient(0, 0, w, h);
+    gradient.addColorStop(0, "#ffb13d");
+    gradient.addColorStop(.48, "#ff7a16");
+    gradient.addColorStop(1, "#ff9b2c");
+    roundedRect(ctx, 0, 0, w, h, 14);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    ctx.save();
+    roundedRect(ctx, 9, 9, w - 18, h - 18, 9);
+    ctx.strokeStyle = "rgba(255,255,255,.72)";
+    ctx.lineWidth = 2;
+    ctx.setLineDash([10, 7]);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalAlpha = .2;
+    ctx.strokeStyle = "#fff";
+    ctx.lineWidth = 1;
+    for (let x = -h; x < w + h; x += 18) {
+      ctx.beginPath();
+      ctx.moveTo(x, h + 12);
+      ctx.lineTo(x + h, -12);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.fillStyle = "#101728";
+    roundedRect(ctx, w * .38, h * .18, w * .24, h * .23, 8);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,.18)";
+    ctx.lineWidth = 2;
+    roundedRect(ctx, w * .38, h * .18, w * .24, h * .23, 8);
+    ctx.stroke();
+
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `900 ${Math.max(22, w * .075)}px system-ui, sans-serif`;
+    ctx.fillText("KUJI", w * .5, h * .295);
+
+    ctx.font = `800 ${Math.max(14, w * .042)}px system-ui, sans-serif`;
+    ctx.fillText("밀어서 쿠폰 오픈", w * .5, h * .55);
+
+    ctx.font = `800 ${Math.max(11, w * .032)}px system-ui, sans-serif`;
+    ctx.fillStyle = "rgba(255,255,255,.82)";
+    ctx.fillText(`#${String(ticket.index + 1).padStart(3, "0")} · SECRET PRIZE`, w * .5, h * .67);
+
+    drawCanvasBarcode(ctx, w, h);
+    drawCanvasArrow(ctx, w, h);
+
+    ctx.globalAlpha = .1;
+    ctx.fillStyle = "#fff";
+    roundedRect(ctx, -w * .35, h * .04, w * .5, h * .16, 20);
+    ctx.fill();
+    roundedRect(ctx, w * .72, h * .76, w * .48, h * .14, 20);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  function drawCanvasBarcode(ctx, w, h) {
+    const bw = w * .28;
+    const bh = h * .12;
+    const x = (w - bw) / 2;
+    const y = h * .76;
+    ctx.fillStyle = "#fff";
+    roundedRect(ctx, x, y, bw, bh, 4);
+    ctx.fill();
+    ctx.fillStyle = "#121725";
+    let cursor = x + 8;
+    for (let i = 0; i < 20; i++) {
+      const barW = i % 4 === 0 ? 3 : 1.5;
+      const barH = bh - 9 - (i % 5);
+      ctx.fillRect(cursor, y + 5, barW, barH);
+      cursor += barW + 3;
+      if (cursor > x + bw - 8) break;
+    }
+  }
+
+  function drawCanvasArrow(ctx, w, h) {
+    ctx.save();
+    ctx.translate(w * .14, h * .51);
+    ctx.strokeStyle = "rgba(255,255,255,.78)";
+    ctx.lineWidth = Math.max(3, w * .01);
+    ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(w * .16, 0);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(w * .16, 0);
+    ctx.lineTo(w * .125, -h * .045);
+    ctx.moveTo(w * .16, 0);
+    ctx.lineTo(w * .125, h * .045);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function roundedRect(ctx, x, y, w, h, r) {
+    const radius = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + w, y, x + w, y + h, radius);
+    ctx.arcTo(x + w, y + h, x, y + h, radius);
+    ctx.arcTo(x, y + h, x, y, radius);
+    ctx.arcTo(x, y, x + w, y, radius);
+    ctx.closePath();
+  }
+
+  function bindEvents() {
+    buildAdminGradeFields();
+    $("randomPickBtn").addEventListener("click", randomPick);
+    $("randomPickDockBtn").addEventListener("click", randomPick);
+    $("resetBtn").addEventListener("click", openResetPinModal);
+    $("settingsBtn").addEventListener("click", openSettingsPinModal);
+    $("closeSettingsBtn").addEventListener("click", closeSettings);
+    $("cancelSettingsBtn").addEventListener("click", closeSettings);
+    $("settingsPanel").addEventListener("click", (event) => {
+      if (event.target === $("settingsPanel")) closeSettings();
+    });
+    $("closeResetPinBtn").addEventListener("click", closeResetPinModal);
+    $("resetPinPanel").addEventListener("click", (event) => {
+      if (event.target === $("resetPinPanel")) closeResetPinModal();
+    });
+    document.querySelectorAll("[data-pin-digit]").forEach((button) => {
+      button.addEventListener("click", () => appendResetPinDigit(button.dataset.pinDigit));
+    });
+    $("resetPinDeleteBtn").addEventListener("click", deleteResetPinDigit);
+    $("resetPinClearBtn").addEventListener("click", clearResetPin);
+    $("resetPinSubmitBtn").addEventListener("click", verifyResetPin);
+    $("defaultConfigBtn").addEventListener("click", () => {
+      populateAdminForm(sanitizeConfig(DEFAULT_CONFIG));
+      showToast("기본 설정을 불러왔습니다.");
+    });
+    $("adminTicketCount").addEventListener("input", updateAdminCountSummary);
+    gradeOrder.forEach((grade) => {
+      $(`adminGrade${grade}`).addEventListener("input", updateAdminCountSummary);
+    });
+    $("applyConfigBtn").addEventListener("click", applyAdminSettings);
+    $("backToGridBtn").addEventListener("click", () => {
+      stopScratchLoops();
+      showScreen("grid-screen");
+    });
+    $("manualOpenBtn").addEventListener("click", () => {
+      if (!scratch.complete) completeOpen(true);
+    });
+    $("autoOpenBtn").addEventListener("click", autoOpen);
+    $("nextDrawBtn").addEventListener("click", () => {
+      renderAll();
+      showScreen("grid-screen");
+    });
+
+    const canvas = $("scratchCanvas");
+    canvas.addEventListener("pointerdown", onPointerDown);
+    canvas.addEventListener("pointermove", onPointerMove);
+    canvas.addEventListener("pointerup", onPointerUp);
+    canvas.addEventListener("pointercancel", onPointerUp);
+    window.addEventListener("resize", handleResize);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stopTransientAnimationFrames();
+    });
+  }
+
+  function randomPick() {
+    const available = state.tickets.filter((ticket) => !ticket.used);
+    if (!available.length) {
+      showToast("남은 쿠폰이 없습니다. 새 게임을 시작해 주세요.");
+      return;
+    }
+    openTicket(randomOf(available).index);
+  }
+
+  function openResetPinModal() {
+    adminPinMode = "reset";
+    $("resetPinTitle").textContent = "관리자 확인";
+    $("resetPinHelp").textContent = "새 쿠폰판을 생성하려면 관리자 비밀번호 4자리를 입력하세요.";
+    openAdminPinModal();
+  }
+
+  function openSettingsPinModal() {
+    adminPinMode = "settings";
+    $("resetPinTitle").textContent = "관리자 페이지";
+    $("resetPinHelp").textContent = "관리자 페이지에 들어가려면 비밀번호 4자리를 입력하세요.";
+    openAdminPinModal();
+  }
+
+  function openAdminPinModal() {
+    resetPinInput = "";
+    renderResetPinDots();
+    $("resetPinError").classList.remove("is-visible");
+    $("resetPinPanel").classList.add("is-open");
+    $("resetPinPanel").setAttribute("aria-hidden", "false");
+    document.addEventListener("keydown", handlePinKeyboard);
+  }
+
+  function closeResetPinModal() {
+    document.removeEventListener("keydown", handlePinKeyboard);
+    resetPinInput = "";
+    renderResetPinDots();
+    $("resetPinError").classList.remove("is-visible");
+    $("resetPinPanel").classList.remove("is-open");
+    $("resetPinPanel").setAttribute("aria-hidden", "true");
+  }
+
+  function handlePinKeyboard(event) {
+    if (!$("resetPinPanel").classList.contains("is-open")) return;
+    if (event.key >= "0" && event.key <= "9") {
+      event.preventDefault();
+      appendResetPinDigit(event.key);
+    } else if (event.key === "Backspace" || event.key === "Delete") {
+      event.preventDefault();
+      deleteResetPinDigit();
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      verifyResetPin();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      closeResetPinModal();
+    }
+  }
+
+  function renderResetPinDots() {
+    const dots = $("resetPinDots");
+    dots.innerHTML = "";
+    for (let i = 0; i < ADMIN_PIN.length; i++) {
+      const dot = document.createElement("span");
+      dot.className = `pin-dot${i < resetPinInput.length ? " is-filled" : ""}`;
+      dots.appendChild(dot);
+    }
+  }
+
+  function appendResetPinDigit(digit) {
+    if (resetPinInput.length >= ADMIN_PIN.length) return;
+    $("resetPinError").classList.remove("is-visible");
+    resetPinInput += digit;
+    renderResetPinDots();
+    if (resetPinInput.length === ADMIN_PIN.length) {
+      verifyResetPin();
+    }
+  }
+
+  function deleteResetPinDigit() {
+    resetPinInput = resetPinInput.slice(0, -1);
+    $("resetPinError").classList.remove("is-visible");
+    renderResetPinDots();
+  }
+
+  function clearResetPin() {
+    resetPinInput = "";
+    $("resetPinError").classList.remove("is-visible");
+    renderResetPinDots();
+  }
+
+  function verifyResetPin() {
+    if (resetPinInput !== ADMIN_PIN) {
+      $("resetPinError").classList.add("is-visible");
+      setTimeout(clearResetPin, 620);
+      return;
+    }
+
+    closeResetPinModal();
+    if (adminPinMode === "settings") {
+      openSettings();
+      return;
+    }
+
+    resetTickets();
+    renderAll();
+    showScreen("grid-screen");
+    showToast("관리자 확인 완료. 새 쿠폰판이 생성되었습니다.");
+  }
+
+  function handleResize() {
+    if (!$("ticket-screen").classList.contains("is-active") || state.selectedIndex == null) return;
+    const ticket = state.tickets[state.selectedIndex];
+    prepareScratch(ticket);
+  }
+
+  function onPointerDown(event) {
+    if (scratch.complete || scratch.autoOpening || !$("ticket-screen").classList.contains("is-active")) return;
+    const point = getLocalPoint(event);
+    scratch.dragging = true;
+    scratch.canvas.setPointerCapture(event.pointerId);
+    scratch.lastPoint = point;
+    eraseAt(point.x, point.y, true);
+    spawnSparks(point.x, point.y, .45);
+    event.preventDefault();
+  }
+
+  function onPointerMove(event) {
+    if (!scratch.dragging || scratch.complete || scratch.autoOpening) return;
+    const point = getLocalPoint(event);
+    const previous = scratch.lastPoint || point;
+    const forwardX = Math.max(point.x, previous.x, scratch.progress * scratch.width);
+    const progress = clamp(forwardX / scratch.width, 0, 1);
+    scratch.progress = Math.max(scratch.progress, progress);
+    eraseToProgress(scratch.progress, point.y);
+    eraseLine(previous.x, previous.y, point.x, point.y);
+    spawnSparks(forwardX, point.y, .7 + scratch.progress * .9);
+    setProgress(scratch.progress);
+    scratch.lastPoint = point;
+    if (scratch.progress >= config.triggerProgress) {
+      completeOpen(false);
+    }
+    event.preventDefault();
+  }
+
+  function onPointerUp(event) {
+    if (!scratch.dragging) return;
+    scratch.dragging = false;
+    scratch.lastPoint = null;
+    try {
+      scratch.canvas.releasePointerCapture(event.pointerId);
+    } catch {}
+
+    if (!scratch.complete && scratch.progress < config.triggerProgress) {
+      showToast(`현재 ${Math.round(scratch.progress * 100)}%입니다. 95%까지 밀어주세요.`);
+    }
+  }
+
+  function getLocalPoint(event) {
+    const rect = scratch.canvas.getBoundingClientRect();
+    return {
+      x: clamp(event.clientX - rect.left, 0, rect.width),
+      y: clamp(event.clientY - rect.top, 0, rect.height)
+    };
+  }
+
+  function eraseToProgress(progress, y) {
+    const ctx = scratch.ctx;
+    const w = scratch.width;
+    const h = scratch.height;
+    const x = clamp(progress * w, 0, w);
+    ctx.save();
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.fillStyle = "#000";
+    ctx.fillRect(-2, -2, Math.max(0, x - 24), h + 4);
+
+    ctx.beginPath();
+    ctx.moveTo(Math.max(0, x - 32), -8);
+    for (let yy = -8; yy <= h + 12; yy += 18) {
+      const wobble = Math.sin(yy * .07 + progress * 18) * 9 + Math.cos(yy * .13) * 5;
+      ctx.lineTo(x + wobble, yy);
+    }
+    ctx.lineTo(-8, h + 8);
+    ctx.lineTo(-8, -8);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(x, y, 38 + progress * 20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function eraseLine(x1, y1, x2, y2) {
+    const ctx = scratch.ctx;
+    ctx.save();
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 62;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function eraseAt(x, y) {
+    const ctx = scratch.ctx;
+    ctx.save();
+    ctx.globalCompositeOperation = "destination-out";
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.arc(x, y, 42, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function setProgress(progress) {
+    const fixed = clamp(progress, 0, 1);
+    $("app").style.setProperty("--progress", fixed.toFixed(4));
+    $("couponWrap").style.setProperty("--peel-x", `${fixed * 100}%`);
+    $("couponWrap").style.setProperty("--peel-opacity", String(clamp(fixed * 1.5, .08, .96)));
+    $("couponWrap").style.setProperty("--guide-opacity", String(fixed > .88 ? .18 : .94));
+    $("guideText").textContent = `${Math.min(100, Math.round(fixed * 100))}%`;
+  }
+
+  function spawnSparks(x, y, power) {
+    const colors = ["#fff7ba", "#ffd166", "#ff8a1f", "#29c7ff", "#7be8ff", "#ffffff"];
+    const count = Math.floor(8 + power * 18);
+    for (let i = 0; i < count; i++) {
+      const angle = Math.PI + (Math.random() - .5) * Math.PI * 1.1;
+      const speed = 1.5 + Math.random() * 7 * power;
+      scratch.particles.push({
+        x: x + (Math.random() - .5) * 12,
+        y: y + (Math.random() - .5) * 46,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed + (Math.random() - .5) * 3,
+        life: 1,
+        decay: .035 + Math.random() * .045,
+        size: 1.5 + Math.random() * 4.5,
+        color: randomOf(colors)
+      });
+    }
+  }
+
+  function startFxLoop() {
+    const ctx = scratch.fxCtx;
+    const loop = () => {
+      scratch.fxRaf = requestAnimationFrame(loop);
+      ctx.clearRect(0, 0, scratch.width, scratch.height);
+      scratch.particles = scratch.particles.filter((particle) => particle.life > 0 && particle.size > .25);
+      scratch.particles.forEach((particle) => {
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vx *= .93;
+        particle.vy *= .93;
+        particle.vy += .06;
+        particle.life -= particle.decay;
+        particle.size *= .97;
+
+        ctx.save();
+        ctx.globalAlpha = clamp(particle.life, 0, 1);
+        ctx.fillStyle = particle.color;
+        ctx.shadowColor = particle.color;
+        ctx.shadowBlur = 11;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha *= .55;
+        ctx.fillRect(particle.x - particle.size * 3, particle.y - particle.size * .28, particle.size * 6, particle.size * .56);
+        ctx.restore();
+      });
+    };
+    loop();
+  }
+
+  function autoOpen() {
+    if (scratch.complete || scratch.autoOpening) return;
+    scratch.autoOpening = true;
+    $("autoOpenBtn").disabled = true;
+    $("manualOpenBtn").disabled = true;
+    const startedAt = performance.now();
+    const duration = config.autoOpenDuration;
+
+    const frame = (now) => {
+      if (scratch.complete) return;
+      const t = clamp((now - startedAt) / duration, 0, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      scratch.progress = Math.max(scratch.progress, eased * config.triggerProgress);
+      const y = scratch.height * (.46 + Math.sin(t * Math.PI * 4) * .12);
+      eraseToProgress(scratch.progress, y);
+      spawnSparks(scratch.progress * scratch.width, y, .95);
+      setProgress(scratch.progress);
+      if (scratch.progress >= config.triggerProgress || t >= 1) {
+        completeOpen(false);
+        return;
+      }
+      scratch.raf = requestAnimationFrame(frame);
+    };
+
+    scratch.raf = requestAnimationFrame(frame);
+  }
+
+  function completeOpen(fromButton) {
+    if (scratch.complete || state.selectedIndex == null) return;
+    scratch.complete = true;
+    scratch.dragging = false;
+    scratch.autoOpening = false;
+    $("autoOpenBtn").disabled = true;
+    $("manualOpenBtn").disabled = true;
+    scratch.progress = 1;
+    setProgress(1);
+    eraseToProgress(1, scratch.height / 2);
+    for (let i = 0; i < 90; i++) {
+      spawnSparks(scratch.width * (.78 + Math.random() * .2), Math.random() * scratch.height, 1.15);
+    }
+    if (fromButton) showToast("즉시 오픈합니다.");
+
+    setTimeout(() => {
+      stopScratchLoops();
+      goReveal();
+    }, 620);
+  }
+
+  function stopScratchLoops() {
+    if (scratch.raf) cancelAnimationFrame(scratch.raf);
+    if (scratch.fxRaf) cancelAnimationFrame(scratch.fxRaf);
+    scratch.raf = 0;
+    scratch.fxRaf = 0;
+    ["autoOpenBtn", "manualOpenBtn"].forEach((id) => {
+      const button = $(id);
+      if (button) button.disabled = false;
+    });
+    if (scratch.fxCtx) scratch.fxCtx.clearRect(0, 0, scratch.width, scratch.height);
+  }
+
+  function stopTransientAnimationFrames() {
+    if (revealRaf) cancelAnimationFrame(revealRaf);
+    if (confettiRaf) cancelAnimationFrame(confettiRaf);
+    revealRaf = 0;
+    confettiRaf = 0;
+  }
+
+  function goReveal() {
+    const ticket = state.tickets[state.selectedIndex];
+    if (!ticket) return;
+    const meta = GRADE_META[ticket.prize.grade];
+    $("reveal-screen").style.setProperty("--grade-color", meta.color);
+    $("revealLetter").textContent = ticket.prize.grade;
+    $("revealRank").textContent = `${meta.rank} · ${ticket.prize.name}`;
+    showScreen("reveal-screen");
+    startRevealExplosion(meta.color, meta.tone);
+    setTimeout(goResult, 1650);
+  }
+
+  function startRevealExplosion(color, tone) {
+    if (revealRaf) cancelAnimationFrame(revealRaf);
+    const canvas = $("revealCanvas");
+    const ctx = canvas.getContext("2d");
+    const dpr = Math.min(window.devicePixelRatio || 1, DPR_MAX);
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const centerX = w / 2;
+    const centerY = h / 2;
+    const particles = [];
+    const colors = [color, tone, "#ffffff", "#ffd166", "#29c7ff"];
+
+    for (let i = 0; i < 190; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 2 + Math.random() * 12;
+      const radius = 18 + Math.random() * 36;
+      particles.push({
+        x: centerX + Math.cos(angle) * radius,
+        y: centerY + Math.sin(angle) * radius,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        life: 1,
+        decay: .008 + Math.random() * .016,
+        size: 2 + Math.random() * 8,
+        color: randomOf(colors)
+      });
+    }
+
+    const loop = () => {
+      revealRaf = requestAnimationFrame(loop);
+      ctx.fillStyle = "rgba(3, 8, 20, .18)";
+      ctx.fillRect(0, 0, w, h);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const particle = particles[i];
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vy += .045;
+        particle.vx *= .992;
+        particle.life -= particle.decay;
+        if (particle.life <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+        ctx.save();
+        ctx.globalAlpha = particle.life;
+        ctx.fillStyle = particle.color;
+        ctx.shadowColor = particle.color;
+        ctx.shadowBlur = 16;
+        starPath(ctx, particle.x, particle.y, particle.size, particle.size * .45, 5);
+        ctx.fill();
+        ctx.restore();
+      }
+    };
+    loop();
+  }
+
+  function starPath(ctx, x, y, outer, inner, points) {
+    ctx.beginPath();
+    for (let i = 0; i < points * 2; i++) {
+      const radius = i % 2 === 0 ? outer : inner;
+      const angle = -Math.PI / 2 + i * Math.PI / points;
+      const px = x + Math.cos(angle) * radius;
+      const py = y + Math.sin(angle) * radius;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+  }
+
+  function goResult() {
+    if (revealRaf) cancelAnimationFrame(revealRaf);
+    revealRaf = 0;
+    const ticket = state.tickets[state.selectedIndex];
+    if (!ticket) return;
+    ticket.used = true;
+    state.currentResult = ticket;
+    saveState();
+
+    const meta = GRADE_META[ticket.prize.grade];
+    $("result-screen").style.setProperty("--grade-color", meta.color);
+    $("resultCard").style.setProperty("--grade-color", meta.color);
+    $("resultBadge").textContent = ticket.prize.grade;
+    $("resultName").textContent = ticket.prize.name;
+    $("resultDesc").textContent = `${meta.rank} · ${ticket.prize.desc}`;
+    $("voucherCode").textContent = `교환권 코드: ${ticket.voucherCode}`;
+    $("prizeImage").src = ticket.prize.image || makePrizeImage(ticket.prize, meta);
+    $("prizeImage").alt = `${ticket.prize.name} 이미지`;
+    showScreen("result-screen");
+    renderStatus();
+    updateRemaining();
+    startConfetti(meta.color);
+  }
+
+  function makePrizeImage(prize, meta) {
+    const label = escapeHtml(prize.imageLabel || prize.name);
+    const grade = escapeHtml(prize.grade);
+    const accent = prize.accent || meta.color;
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720">
+        <defs>
+          <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+            <stop offset="0" stop-color="#07101f"/>
+            <stop offset=".46" stop-color="${accent}"/>
+            <stop offset="1" stop-color="#ff8a1f"/>
+          </linearGradient>
+          <radialGradient id="glow" cx=".5" cy=".45" r=".56">
+            <stop offset="0" stop-color="#ffffff" stop-opacity=".75"/>
+            <stop offset=".35" stop-color="${accent}" stop-opacity=".5"/>
+            <stop offset="1" stop-color="#07101f" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="shadow"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000" flood-opacity=".45"/></filter>
+        </defs>
+        <rect width="960" height="720" fill="url(#bg)"/>
+        <rect width="960" height="720" fill="url(#glow)"/>
+        <g opacity=".18" stroke="#fff" stroke-width="2">
+          ${Array.from({ length: 18 }, (_, i) => `<path d="M${i * 70 - 160} 730L${i * 70 + 160} -10"/>`).join("")}
+        </g>
+        <g filter="url(#shadow)">
+          <rect x="206" y="132" width="548" height="360" rx="36" fill="#08101f" opacity=".86"/>
+          <rect x="234" y="160" width="492" height="304" rx="26" fill="none" stroke="#fff" stroke-opacity=".26" stroke-width="4" stroke-dasharray="16 12"/>
+          <circle cx="480" cy="275" r="86" fill="${accent}" opacity=".92"/>
+          <text x="480" y="306" text-anchor="middle" font-family="Arial, sans-serif" font-size="118" font-weight="900" fill="#07101f">${grade}</text>
+          <text x="480" y="405" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="900" fill="#fff">${label}</text>
+        </g>
+        <text x="480" y="610" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="800" fill="#fff" opacity=".84">KUJI PRIZE VOUCHER</text>
+      </svg>
+    `;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+  }
+
+  function startConfetti(mainColor) {
+    if (confettiRaf) cancelAnimationFrame(confettiRaf);
+    const canvas = $("confettiCanvas");
+    const ctx = canvas.getContext("2d");
+    const dpr = Math.min(window.devicePixelRatio || 1, DPR_MAX);
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const colors = [mainColor, "#29c7ff", "#ff8a1f", "#ffd166", "#ffffff", "#37f2a3"];
+    const pieces = Array.from({ length: 130 }, () => ({
+      x: Math.random() * w,
+      y: -40 - Math.random() * h * .65,
+      vx: (Math.random() - .5) * 3,
+      vy: 2 + Math.random() * 4,
+      vr: (Math.random() - .5) * .18,
+      rot: Math.random() * Math.PI,
+      width: 5 + Math.random() * 10,
+      height: 3 + Math.random() * 7,
+      color: randomOf(colors)
+    }));
+    let frames = 160;
+
+    const loop = () => {
+      frames -= 1;
+      ctx.clearRect(0, 0, w, h);
+      pieces.forEach((piece) => {
+        piece.x += piece.vx;
+        piece.y += piece.vy;
+        piece.rot += piece.vr;
+        piece.vy += .035;
+        if (piece.y > h + 40) {
+          piece.y = -40;
+          piece.x = Math.random() * w;
+        }
+        ctx.save();
+        ctx.translate(piece.x, piece.y);
+        ctx.rotate(piece.rot);
+        ctx.globalAlpha = clamp(frames / 34, 0, 1);
+        ctx.fillStyle = piece.color;
+        ctx.fillRect(-piece.width / 2, -piece.height / 2, piece.width, piece.height);
+        ctx.restore();
+      });
+      if (frames > 0) {
+        confettiRaf = requestAnimationFrame(loop);
+      } else {
+        ctx.clearRect(0, 0, w, h);
+        confettiRaf = 0;
+      }
+    };
+    loop();
+  }
+
+  function openSettings() {
+    populateAdminForm();
+    $("settingsPanel").classList.add("is-open");
+    $("settingsPanel").setAttribute("aria-hidden", "false");
+  }
+
+  function closeSettings() {
+    $("settingsPanel").classList.remove("is-open");
+    $("settingsPanel").setAttribute("aria-hidden", "true");
+  }
+
+  function buildAdminGradeFields() {
+    const container = $("adminGradeFields");
+    container.innerHTML = gradeOrder.map((grade) => `
+      <label class="admin-field admin-count-field" style="--grade-color:${GRADE_META[grade].color}">
+        ${grade}상 개수
+        <input id="adminGrade${grade}" type="text" inputmode="numeric" pattern="[0-9]*">
+      </label>
+    `).join("");
+    buildAdminProductFields();
+  }
+
+  function buildAdminProductFields() {
+    const container = $("adminProductFields");
+    if (!container) return;
+    container.innerHTML = gradeOrder.map((grade) => {
+      const meta = GRADE_META[grade];
+      return `
+        <div class="admin-product-row">
+          <div class="admin-product-grade-badge" style="--grade-color:${meta.color}">${grade}</div>
+          <div class="admin-product-inputs">
+            <label class="admin-field">
+              ${meta.rank} 상품명
+              <input id="adminProduct${grade}Name" type="text" placeholder="${meta.label}">
+            </label>
+            <label class="admin-field">
+              설명
+              <input id="adminProduct${grade}Desc" type="text" placeholder="${meta.label} 경품입니다.">
+            </label>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function populateAdminForm(source = config) {
+    if (!$("adminTicketCount")) return;
+    $("adminTicketCount").value = source.ticketCount;
+    gradeOrder.forEach((grade) => {
+      $(`adminGrade${grade}`).value = source.gradeCounts[grade];
+      const nameEl = $(`adminProduct${grade}Name`);
+      const descEl = $(`adminProduct${grade}Desc`);
+      if (nameEl && descEl) {
+        const firstProduct = (source.products || []).find((p) => p.grade === grade);
+        nameEl.value = firstProduct ? firstProduct.name : "";
+        descEl.value = firstProduct ? firstProduct.desc : "";
+      }
+    });
+    $("adminHomeTitle").value = source.copy.homeTitle;
+    $("adminHomeSubtitle").value = source.copy.homeSubtitle;
+    $("adminOpenTitle").value = source.copy.openTitle;
+    $("adminOpenSubtitle").value = source.copy.openSubtitle;
+    $("adminResultTitle").value = source.copy.resultTitle;
+    updateAdminCountSummary();
+  }
+
+  function readAdminInteger(id) {
+    return Math.max(0, Math.floor(Number($(id).value) || 0));
+  }
+
+  function readAdminGradeCounts() {
+    return gradeOrder.reduce((acc, grade) => {
+      acc[grade] = readAdminInteger(`adminGrade${grade}`);
+      return acc;
+    }, {});
+  }
+
+  function getAdminCountTotal() {
+    const counts = readAdminGradeCounts();
+    return gradeOrder.reduce((sum, grade) => sum + counts[grade], 0);
+  }
+
+  function updateAdminCountSummary() {
+    if (!$("adminCountSummary")) return;
+    const target = Math.max(1, readAdminInteger("adminTicketCount"));
+    const total = getAdminCountTotal();
+    const summary = $("adminCountSummary");
+    summary.classList.toggle("is-error", total !== target);
+    summary.querySelector("b").textContent = `${total} / ${target}`;
+  }
+
+  function applyAdminSettings() {
+    const ticketCount = Math.max(1, readAdminInteger("adminTicketCount"));
+    const gradeCounts = readAdminGradeCounts();
+    const gradeTotal = gradeOrder.reduce((sum, grade) => sum + gradeCounts[grade], 0);
+
+    if (gradeTotal !== ticketCount) {
+      showToast(`등급별 개수 합계(${gradeTotal})가 뽑기 수량(${ticketCount})과 같아야 합니다.`);
+      updateAdminCountSummary();
+      return;
+    }
+
+    // Build updated product list from admin product fields
+    const updatedProducts = gradeOrder.flatMap((grade) => {
+      const nameEl = $(`adminProduct${grade}Name`);
+      const descEl = $(`adminProduct${grade}Desc`);
+      const customName = nameEl ? nameEl.value.trim() : "";
+      const customDesc = descEl ? descEl.value.trim() : "";
+      if (customName) {
+        const meta = GRADE_META[grade];
+        return [{
+          id: `${grade}-custom-001`,
+          grade,
+          name: customName,
+          desc: customDesc || `${meta.rank} 경품입니다.`,
+          imageLabel: customName.slice(0, 14),
+          accent: meta.color
+        }];
+      }
+      // Keep existing products for this grade unchanged
+      return config.products.filter((p) => p.grade === grade);
+    });
+
+    config = sanitizeConfig({
+      ...config,
+      ticketCount,
+      gradeCounts,
+      gradeRates: { ...gradeCounts },
+      products: updatedProducts.length ? updatedProducts : DEFAULT_PRODUCTS,
+      copy: {
+        homeTitle: $("adminHomeTitle").value.trim() || DEFAULT_CONFIG.copy.homeTitle,
+        homeSubtitle: $("adminHomeSubtitle").value.trim() || DEFAULT_CONFIG.copy.homeSubtitle,
+        openTitle: $("adminOpenTitle").value.trim() || DEFAULT_CONFIG.copy.openTitle,
+        openSubtitle: $("adminOpenSubtitle").value.trim() || DEFAULT_CONFIG.copy.openSubtitle,
+        resultTitle: $("adminResultTitle").value.trim() || DEFAULT_CONFIG.copy.resultTitle
+      }
+    });
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+    resetTickets();
+    renderAll();
+    closeSettings();
+    showScreen("grid-screen");
+    showToast("관리자 설정을 적용하고 새 쿠폰판을 만들었습니다.");
+  }
+
+  function showToast(message) {
+    const toast = $("toast");
+    toast.textContent = message;
+    toast.classList.add("is-on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("is-on"), 2200);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
