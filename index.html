@@ -532,61 +532,39 @@
     transform: translateZ(0);
   }
 
+  .ticket-bg-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 12px;
+    display: block;
+    z-index: 0;
+  }
+
   .prize-underlay {
     position: absolute;
     inset: 0;
-    display: grid;
-    grid-template-columns: .88fr 1.12fr;
+    z-index: 1;
+    display: flex;
     align-items: center;
-    gap: 12px;
-    padding: clamp(14px, 4vw, 25px);
-    background:
-      linear-gradient(130deg, rgba(41, 199, 255, .24), rgba(255, 138, 31, .18)),
-      radial-gradient(circle at 20% 50%, color-mix(in srgb, var(--grade-color), transparent 48%), transparent 44%),
-      #0a1123;
-    border: 2px solid color-mix(in srgb, var(--grade-color), transparent 35%);
+    justify-content: flex-end;
+    padding-right: 7%;
+    pointer-events: none;
   }
 
   .under-grade {
-    display: grid;
-    place-items: center;
-    width: clamp(96px, 27vw, 155px);
-    aspect-ratio: 1;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, .35);
-    color: var(--grade-color);
-    font-size: clamp(58px, 16vw, 102px);
+    color: #fff;
+    font-size: clamp(68px, 19vw, 100px);
     line-height: 1;
     font-weight: 900;
-    border: 3px solid currentColor;
-    box-shadow: inset 0 0 34px color-mix(in srgb, var(--grade-color), transparent 72%), 0 0 38px color-mix(in srgb, var(--grade-color), transparent 58%);
-    text-shadow: 0 0 26px currentColor;
-  }
-
-  .under-info {
-    min-width: 0;
-  }
-
-  .under-rank {
-    color: var(--grade-color);
-    font-size: clamp(20px, 5.6vw, 36px);
-    line-height: 1.06;
-    font-weight: 900;
-  }
-
-  .under-name {
-    margin-top: 7px;
-    color: #fff;
-    font-size: clamp(14px, 3.6vw, 20px);
-    font-weight: 800;
-    line-height: 1.28;
-  }
-
-  .under-small {
-    margin-top: 9px;
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.38;
+    font-style: italic;
+    letter-spacing: -0.02em;
+    text-shadow:
+      0 0 48px rgba(255, 255, 255, .92),
+      0 0 18px rgba(255, 255, 255, .75),
+      0 3px 20px rgba(0, 0, 0, .8);
   }
 
   #scratchCanvas,
@@ -1511,13 +1489,9 @@
         </div>
 
         <div class="coupon-wrap" id="couponWrap">
+          <img id="ticketBgImg" class="ticket-bg-img" src="" alt="쿠지 티켓">
           <div class="prize-underlay" id="prizeUnderlay">
-            <div class="under-grade" id="underGrade">?</div>
-            <div class="under-info">
-              <div class="under-rank" id="underRank">결과 대기</div>
-              <div class="under-name" id="underName">쿠폰을 열면 상품이 표시됩니다.</div>
-              <div class="under-small" id="underSmall">선택한 쿠폰의 결과는 이미 확정되어 있습니다.</div>
-            </div>
+            <div class="under-grade" id="underGrade"></div>
           </div>
           <canvas id="scratchCanvas"></canvas>
           <canvas id="scratchFxCanvas"></canvas>
@@ -1996,6 +1970,7 @@
         index,
         used: false,
         prize,
+        imageIndex: Math.floor(Math.random() * 20) + 1,
         voucherCode: createVoucherCode(index, prize.grade)
       };
     });
@@ -2122,11 +2097,9 @@
     state.selectedIndex = index;
     state.currentResult = ticket;
     const meta = GRADE_META[ticket.prize.grade];
-    $("prizeUnderlay").style.setProperty("--grade-color", meta.color);
     $("underGrade").textContent = ticket.prize.grade;
-    $("underRank").textContent = `${meta.rank} · ${meta.label}`;
-    $("underName").textContent = ticket.prize.name;
-    $("underSmall").textContent = `교환권 코드 ${ticket.voucherCode}`;
+    const imgIdx = ticket.imageIndex || (Math.floor(Math.random() * 20) + 1);
+    $("ticketBgImg").src = `paper/${imgIdx}.png`;
     showScreen("ticket-screen");
     requestAnimationFrame(() => prepareScratch(ticket));
   }
@@ -2178,65 +2151,38 @@
     ctx.globalCompositeOperation = "source-over";
     ctx.clearRect(0, 0, w, h);
 
-    const gradient = ctx.createLinearGradient(0, 0, w, h);
-    gradient.addColorStop(0, "#ffb13d");
-    gradient.addColorStop(.48, "#ff7a16");
-    gradient.addColorStop(1, "#ff9b2c");
+    // Left side: barely visible overlay so character is clear
+    // Right ~38%: completely opaque — letter totally hidden until scratched
+    const gradient = ctx.createLinearGradient(0, 0, w, 0);
+    gradient.addColorStop(0,    "rgba(4, 8, 22, 0.10)");
+    gradient.addColorStop(0.50, "rgba(4, 8, 22, 0.12)");
+    gradient.addColorStop(0.60, "rgba(4, 8, 22, 0.70)");
+    gradient.addColorStop(0.65, "rgba(4, 8, 22, 1.00)");
+    gradient.addColorStop(1.0,  "rgba(4, 8, 22, 1.00)");
+
     roundedRect(ctx, 0, 0, w, h, 14);
     ctx.fillStyle = gradient;
     ctx.fill();
 
+    // Subtle swipe hint arrow (center-left, low opacity)
     ctx.save();
-    roundedRect(ctx, 9, 9, w - 18, h - 18, 9);
-    ctx.strokeStyle = "rgba(255,255,255,.72)";
-    ctx.lineWidth = 2;
-    ctx.setLineDash([10, 7]);
-    ctx.stroke();
-    ctx.restore();
-
-    ctx.save();
-    ctx.globalAlpha = .2;
+    ctx.globalAlpha = 0.38;
     ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 1;
-    for (let x = -h; x < w + h; x += 18) {
-      ctx.beginPath();
-      ctx.moveTo(x, h + 12);
-      ctx.lineTo(x + h, -12);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    ctx.fillStyle = "#101728";
-    roundedRect(ctx, w * .38, h * .18, w * .24, h * .23, 8);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(255,255,255,.18)";
-    ctx.lineWidth = 2;
-    roundedRect(ctx, w * .38, h * .18, w * .24, h * .23, 8);
+    ctx.lineWidth = Math.max(2.5, w * 0.008);
+    ctx.lineCap = "round";
+    const ax = w * 0.08;
+    const ay = h * 0.5;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(ax + w * 0.13, ay);
     ctx.stroke();
-
-    ctx.fillStyle = "#fff";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.font = `900 ${Math.max(22, w * .075)}px system-ui, sans-serif`;
-    ctx.fillText("KUJI", w * .5, h * .295);
-
-    ctx.font = `800 ${Math.max(14, w * .042)}px system-ui, sans-serif`;
-    ctx.fillText("밀어서 쿠폰 오픈", w * .5, h * .55);
-
-    ctx.font = `800 ${Math.max(11, w * .032)}px system-ui, sans-serif`;
-    ctx.fillStyle = "rgba(255,255,255,.82)";
-    ctx.fillText(`#${String(ticket.index + 1).padStart(3, "0")} · SECRET PRIZE`, w * .5, h * .67);
-
-    drawCanvasBarcode(ctx, w, h);
-    drawCanvasArrow(ctx, w, h);
-
-    ctx.globalAlpha = .1;
-    ctx.fillStyle = "#fff";
-    roundedRect(ctx, -w * .35, h * .04, w * .5, h * .16, 20);
-    ctx.fill();
-    roundedRect(ctx, w * .72, h * .76, w * .48, h * .14, 20);
-    ctx.fill();
-    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.moveTo(ax + w * 0.13, ay);
+    ctx.lineTo(ax + w * 0.095, ay - h * 0.08);
+    ctx.moveTo(ax + w * 0.13, ay);
+    ctx.lineTo(ax + w * 0.095, ay + h * 0.08);
+    ctx.stroke();
+    ctx.restore();
   }
 
   function drawCanvasBarcode(ctx, w, h) {
