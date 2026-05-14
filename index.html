@@ -1034,6 +1034,23 @@
     box-shadow: inset 0 0 16px color-mix(in srgb, var(--grade-color), transparent 90%);
   }
 
+  .admin-count-field {
+    white-space: nowrap;
+  }
+
+  .admin-count-field input[readonly] {
+    cursor: default;
+    opacity: 0.75;
+    background: rgba(255, 255, 255, .03);
+  }
+
+  .admin-count-field label-note {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+    display: block;
+  }
+
   .admin-summary {
     display: flex;
     justify-content: space-between;
@@ -2264,6 +2281,7 @@
     scratch.autoOpening = false;
     scratch.lastPoint = null;
     scratch.particles = [];
+    scratch.revealTimer = 0;
     setProgress(0);
     resizeScratchCanvas();
     drawScratchSurface(ticket);
@@ -2400,10 +2418,11 @@
       populateAdminForm(sanitizeConfig(DEFAULT_CONFIG));
       showToast("기본 설정을 불러왔습니다.");
     });
-    $("adminTicketCount").addEventListener("input", updateAdminCountSummary);
-    gradeOrder.forEach((grade) => {
-      $(`adminGrade${grade}`).addEventListener("input", updateAdminCountSummary);
+    $("adminTicketCount").addEventListener("input", updateFGradeAuto);
+    ["A", "B", "C", "D", "E"].forEach((grade) => {
+      $(`adminGrade${grade}`).addEventListener("input", updateFGradeAuto);
     });
+    // F는 read-only 자동 계산 — 리스너 불필요
     $("applyConfigBtn").addEventListener("click", applyAdminSettings);
     $("adminAlignBtns").addEventListener("click", (e) => {
       const btn = e.target.closest(".align-btn");
@@ -2660,6 +2679,8 @@
     $("couponWrap").style.setProperty("--peel-opacity", String(clamp(fixed * 1.5, .08, .96)));
     $("couponWrap").style.setProperty("--guide-opacity", String(fixed > .88 ? .18 : .94));
     $("guideText").textContent = `${Math.min(100, Math.round(fixed * 100))}%`;
+    // 85% 이상 긁으면 알파벳이 보이므로 돌아가기 비활성화
+    $("backToGridBtn").disabled = fixed >= 0.82;
   }
 
   function spawnSparks(x, y, power) {
@@ -2754,7 +2775,8 @@
     }
     if (fromButton) showToast("즉시 오픈합니다.");
 
-    setTimeout(() => {
+    scratch.revealTimer = setTimeout(() => {
+      scratch.revealTimer = 0;
       stopScratchLoops();
       goReveal();
     }, 620);
@@ -2765,6 +2787,13 @@
     if (scratch.fxRaf) cancelAnimationFrame(scratch.fxRaf);
     scratch.raf = 0;
     scratch.fxRaf = 0;
+    // 돌아가기 버튼 클릭 시 reveal 전환 타이머 취소
+    if (scratch.revealTimer) {
+      clearTimeout(scratch.revealTimer);
+      scratch.revealTimer = 0;
+    }
+    scratch.complete = false;
+    scratch.autoOpening = false;
     ["autoOpenBtn", "manualOpenBtn"].forEach((id) => {
       const button = $(id);
       if (button) button.disabled = false;
@@ -3003,12 +3032,16 @@
 
   function buildAdminGradeFields() {
     const container = $("adminGradeFields");
-    container.innerHTML = gradeOrder.map((grade) => `
-      <label class="admin-field admin-count-field" style="--grade-color:${GRADE_META[grade].color}">
-        ${grade}상 개수
-        <input id="adminGrade${grade}" type="text" inputmode="numeric" pattern="[0-9]*">
-      </label>
-    `).join("");
+    container.innerHTML = gradeOrder.map((grade) => {
+      const isAuto = grade === "F";
+      return `
+        <label class="admin-field admin-count-field" style="--grade-color:${GRADE_META[grade].color}">
+          ${grade}상 개수${isAuto ? "(자동)" : ""}
+          <input id="adminGrade${grade}" type="text" inputmode="numeric" pattern="[0-9]*"
+            ${isAuto ? "readonly" : ""}>
+        </label>
+      `;
+    }).join("");
     buildAdminProductFields();
   }
 
@@ -3182,7 +3215,7 @@
       pendingGradePhotos[grade] = Array.from(source.gradePhotos?.[grade] || []);
       buildAdminPhotoSlots(grade);
     });
-    updateAdminCountSummary();
+    updateFGradeAuto();
   }
 
   function readAdminInteger(id) {
@@ -3199,6 +3232,17 @@
   function getAdminCountTotal() {
     const counts = readAdminGradeCounts();
     return gradeOrder.reduce((sum, grade) => sum + counts[grade], 0);
+  }
+
+  function updateFGradeAuto() {
+    const fInput = $("adminGradeF");
+    if (!fInput) return;
+    const total = Math.max(0, readAdminInteger("adminTicketCount"));
+    const sumAtoE = ["A", "B", "C", "D", "E"].reduce(
+      (sum, g) => sum + readAdminInteger(`adminGrade${g}`), 0
+    );
+    fInput.value = Math.max(0, total - sumAtoE);
+    updateAdminCountSummary();
   }
 
   function updateAdminCountSummary() {
