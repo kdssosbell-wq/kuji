@@ -1084,6 +1084,109 @@
     gap: 6px;
   }
 
+  /* Header alignment buttons */
+  .align-btn-group {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .align-btn {
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, .06);
+    border: 1.5px solid rgba(255, 255, 255, .13);
+    color: var(--muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background .12s, border-color .12s, color .12s;
+  }
+
+  .align-btn.is-active {
+    background: rgba(41, 199, 255, .18);
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  /* Brand alignment overrides */
+  .brand.align-center {
+    flex: 1;
+    align-items: center;
+    text-align: center;
+  }
+
+  .brand.align-right {
+    flex: 1;
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  /* Grade photo upload slots */
+  .grade-photo-slots {
+    padding: 8px 0 6px;
+    border-top: 1px dashed rgba(123, 232, 255, .12);
+    margin-top: 4px;
+  }
+
+  .grade-photo-slots-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .photo-slot-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .photo-slot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, .04);
+    border: 1.5px dashed rgba(255, 255, 255, .15);
+    border-radius: 8px;
+    padding: 6px 10px;
+  }
+
+  .photo-slot-thumb {
+    width: 44px;
+    height: 33px;
+    border-radius: 5px;
+    object-fit: cover;
+    background: rgba(0, 0, 0, .3);
+    border: 1px solid rgba(255, 255, 255, .12);
+    flex-shrink: 0;
+  }
+
+  .photo-slot-info {
+    flex: 1;
+    min-width: 0;
+    font-size: 11px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .photo-slot-btn {
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, .08);
+    border: 1px solid rgba(255, 255, 255, .18);
+    color: var(--text);
+    font-size: 11px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .photo-slot-btn.has-photo {
+    border-color: var(--green);
+    color: var(--green);
+  }
+
   .pin-panel {
     position: fixed;
     inset: 0;
@@ -1577,6 +1680,14 @@
           </section>
           <section class="admin-section">
             <h3>화면 문구</h3>
+            <label class="admin-field">
+              홈 제목 정렬
+              <div class="align-btn-group" id="adminAlignBtns">
+                <button class="align-btn is-active" type="button" data-align="left">왼쪽</button>
+                <button class="align-btn" type="button" data-align="center">가운데</button>
+                <button class="align-btn" type="button" data-align="right">오른쪽</button>
+              </div>
+            </label>
             <div class="admin-grid">
               <label class="admin-field">
                 홈 제목
@@ -1768,6 +1879,8 @@
     ticketCount: 100,
     triggerProgress: .95,
     autoOpenDuration: 1550,
+    headerAlign: "left",
+    gradePhotos: { A: [], B: [], C: [] },
     copy: {
       homeTitle: "KUJI 온라인 경품 뽑기",
       homeSubtitle: "쿠폰을 선택하면 슬라이드 오픈 화면으로 이동합니다.",
@@ -1978,14 +2091,19 @@
   function resetTickets() {
     const gradeDeck = buildGradeDeck();
     const imagePool = buildImageIndexPool(gradeDeck.length);
+    const gradePhotoCounters = {};
     state.tickets = gradeDeck.map((grade, index) => {
       const prize = pickPrize(grade);
+      gradePhotoCounters[grade] = (gradePhotoCounters[grade] || 0);
+      const photoSlotIndex = gradePhotoCounters[grade];
+      gradePhotoCounters[grade]++;
       return {
         id: `T-${String(index + 1).padStart(3, "0")}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`,
         index,
         used: false,
         prize,
         imageIndex: imagePool[index],
+        photoSlotIndex,
         voucherCode: createVoucherCode(index, prize.grade)
       };
     });
@@ -2040,6 +2158,14 @@
     $("openSubtitleText").textContent = config.copy.openSubtitle;
     $("resultTitleText").textContent = config.copy.resultTitle;
     document.title = config.copy.homeTitle;
+    // Apply header alignment
+    const brand = document.querySelector(".brand");
+    if (brand) {
+      brand.classList.remove("align-left", "align-center", "align-right");
+      if (config.headerAlign && config.headerAlign !== "left") {
+        brand.classList.add(`align-${config.headerAlign}`);
+      }
+    }
   }
 
   function renderStatus() {
@@ -2279,6 +2405,12 @@
       $(`adminGrade${grade}`).addEventListener("input", updateAdminCountSummary);
     });
     $("applyConfigBtn").addEventListener("click", applyAdminSettings);
+    $("adminAlignBtns").addEventListener("click", (e) => {
+      const btn = e.target.closest(".align-btn");
+      if (!btn) return;
+      document.querySelectorAll("#adminAlignBtns .align-btn").forEach((b) => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+    });
     $("backToGridBtn").addEventListener("click", () => {
       stopScratchLoops();
       showScreen("grid-screen");
@@ -2747,7 +2879,11 @@
     $("resultName").textContent = ticket.prize.name;
     $("resultDesc").textContent = `${meta.rank} · ${ticket.prize.desc}`;
     $("voucherCode").textContent = `교환권 코드: ${ticket.voucherCode}`;
-    $("prizeImage").src = ticket.prize.image || makePrizeImage(ticket.prize, meta);
+    // A/B/C 등급이고 업로드된 사진이 있으면 사진 사용, 없으면 기본 생성 이미지
+    const uploadedPhoto = ["A", "B", "C"].includes(ticket.prize.grade)
+      ? (config.gradePhotos?.[ticket.prize.grade]?.[ticket.photoSlotIndex] || null)
+      : null;
+    $("prizeImage").src = uploadedPhoto || ticket.prize.image || makePrizeImage(ticket.prize, meta);
     $("prizeImage").alt = `${ticket.prize.name} 이미지`;
     showScreen("result-screen");
     renderStatus();
@@ -2876,11 +3012,15 @@
     buildAdminProductFields();
   }
 
+  // Stores photo data URLs while admin form is open
+  const pendingGradePhotos = { A: [], B: [], C: [] };
+
   function buildAdminProductFields() {
     const container = $("adminProductFields");
     if (!container) return;
     container.innerHTML = gradeOrder.map((grade) => {
       const meta = GRADE_META[grade];
+      const hasPhotoUpload = ["A", "B", "C"].includes(grade);
       return `
         <div class="admin-product-row">
           <div class="admin-product-grade-badge" style="--grade-color:${meta.color}">${grade}</div>
@@ -2895,8 +3035,123 @@
             </label>
           </div>
         </div>
+        ${hasPhotoUpload ? `<div id="adminPhotoSlots${grade}"></div>` : ""}
       `;
     }).join("");
+
+    // Build initial photo slots and attach count-change listeners for A/B/C
+    ["A", "B", "C"].forEach((grade) => {
+      buildAdminPhotoSlots(grade);
+      const countInput = $(`adminGrade${grade}`);
+      if (countInput && !countInput._photoListener) {
+        countInput._photoListener = true;
+        countInput.addEventListener("input", () => buildAdminPhotoSlots(grade));
+      }
+    });
+  }
+
+  function buildAdminPhotoSlots(grade) {
+    const container = $(`adminPhotoSlots${grade}`);
+    if (!container) return;
+    const count = readAdminInteger(`adminGrade${grade}`) || 0;
+
+    // Resize pendingGradePhotos array to match count (preserve existing)
+    const existing = pendingGradePhotos[grade] || [];
+    pendingGradePhotos[grade] = Array.from({ length: count }, (_, i) => existing[i] || null);
+
+    container.innerHTML = "";
+    if (count === 0) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "grade-photo-slots";
+
+    const label = document.createElement("div");
+    label.className = "grade-photo-slots-label";
+    label.textContent = `${grade}상 경품 사진 (${count}장) — 결과 화면에 표시됩니다`;
+    wrapper.appendChild(label);
+
+    const list = document.createElement("div");
+    list.className = "photo-slot-list";
+
+    for (let i = 0; i < count; i++) {
+      const hasPhoto = !!pendingGradePhotos[grade][i];
+      const slot = document.createElement("div");
+      slot.className = "photo-slot";
+
+      const thumb = document.createElement("img");
+      thumb.className = "photo-slot-thumb";
+      thumb.alt = "";
+      if (hasPhoto) {
+        thumb.src = pendingGradePhotos[grade][i];
+      } else {
+        thumb.style.opacity = "0.25";
+      }
+
+      const info = document.createElement("span");
+      info.className = "photo-slot-info";
+      info.textContent = hasPhoto ? "업로드 완료 ✓" : `${grade}상 ${i + 1}번 사진`;
+
+      const btn = document.createElement("button");
+      btn.className = "photo-slot-btn" + (hasPhoto ? " has-photo" : "");
+      btn.type = "button";
+      btn.textContent = hasPhoto ? "변경" : "업로드";
+
+      ((gradeCapture, idxCapture, slotCapture) => {
+        btn.addEventListener("click", () => handlePhotoUpload(gradeCapture, idxCapture, slotCapture));
+      })(grade, i, slot);
+
+      slot.appendChild(thumb);
+      slot.appendChild(info);
+      slot.appendChild(btn);
+      list.appendChild(slot);
+    }
+
+    wrapper.appendChild(list);
+    container.appendChild(wrapper);
+  }
+
+  function handlePhotoUpload(grade, index, slotEl) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        const compressed = await compressImage(ev.target.result, 900, 675, 0.78);
+        pendingGradePhotos[grade][index] = compressed;
+        // Update slot UI
+        const thumb = slotEl.querySelector(".photo-slot-thumb");
+        const info = slotEl.querySelector(".photo-slot-info");
+        const btn = slotEl.querySelector(".photo-slot-btn");
+        if (thumb) { thumb.src = compressed; thumb.style.opacity = "1"; }
+        if (info) info.textContent = file.name.length > 22 ? file.name.slice(0, 20) + "…" : file.name;
+        if (btn) { btn.textContent = "변경"; btn.classList.add("has-photo"); }
+      };
+      reader.readAsDataURL(file);
+    });
+    input.click();
+  }
+
+  function compressImage(dataUrl, maxW, maxH, quality) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        let { naturalWidth: w, naturalHeight: h } = img;
+        if (w > maxW || h > maxH) {
+          const ratio = Math.min(maxW / w, maxH / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.src = dataUrl;
+    });
   }
 
   function populateAdminForm(source = config) {
@@ -2917,6 +3172,16 @@
     $("adminOpenTitle").value = source.copy.openTitle;
     $("adminOpenSubtitle").value = source.copy.openSubtitle;
     $("adminResultTitle").value = source.copy.resultTitle;
+    // Restore header alignment buttons
+    const align = source.headerAlign || "left";
+    document.querySelectorAll("#adminAlignBtns .align-btn").forEach((btn) => {
+      btn.classList.toggle("is-active", btn.dataset.align === align);
+    });
+    // Load saved photos into pendingGradePhotos and rebuild slots
+    ["A", "B", "C"].forEach((grade) => {
+      pendingGradePhotos[grade] = Array.from(source.gradePhotos?.[grade] || []);
+      buildAdminPhotoSlots(grade);
+    });
     updateAdminCountSummary();
   }
 
@@ -2977,11 +3242,20 @@
       return config.products.filter((p) => p.grade === grade);
     });
 
+    // Read header alignment from active button
+    const headerAlign = document.querySelector("#adminAlignBtns .align-btn.is-active")?.dataset.align || "left";
+
     config = sanitizeConfig({
       ...config,
       ticketCount,
       gradeCounts,
       gradeRates: { ...gradeCounts },
+      headerAlign,
+      gradePhotos: {
+        A: pendingGradePhotos.A.slice(0, gradeCounts.A),
+        B: pendingGradePhotos.B.slice(0, gradeCounts.B),
+        C: pendingGradePhotos.C.slice(0, gradeCounts.C)
+      },
       products: updatedProducts.length ? updatedProducts : DEFAULT_PRODUCTS,
       copy: {
         homeTitle: $("adminHomeTitle").value.trim() || DEFAULT_CONFIG.copy.homeTitle,
