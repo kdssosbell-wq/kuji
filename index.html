@@ -1885,6 +1885,12 @@
             <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" style="display:none">
           </section>
           <section class="admin-section">
+            <h3>경품 사진 일괄 업로드</h3>
+            <p class="settings-help" style="font-size:11px;margin-bottom:8px">파일명이 "A 1.png", "B 2.jpg" 형식인 폴더를 선택하면 A·B·C상 경품 사진이 자동으로 배치됩니다.</p>
+            <button class="excel-upload-btn" type="button" id="folderUploadBtn">📁 사진 폴더 업로드</button>
+            <input type="file" id="folderUploadInput" webkitdirectory accept="image/*" style="display:none">
+          </section>
+          <section class="admin-section">
             <h3>기본 수량</h3>
             <label class="admin-field">
               뽑기(쿠지) 수량
@@ -3222,6 +3228,61 @@
     };
     reader.readAsArrayBuffer(file);
   }
+
+  // 폴더 업로드 핸들러 (파일명 첫 글자로 등급 판별)
+  $("folderUploadBtn").addEventListener("click", () => $("folderUploadInput").click());
+  $("folderUploadInput").addEventListener("change", async (e) => {
+    const files = Array.from(e.target.files).filter(f => f.type.startsWith("image/"));
+    if (!files.length) { showToast("이미지 파일이 없습니다."); return; }
+
+    // 파일명 첫 글자(대문자)로 등급 분류
+    const gradeFiles = {};
+    for (const file of files) {
+      const firstChar = file.name[0].toUpperCase();
+      if (/^[A-G]$/.test(firstChar)) {
+        if (!gradeFiles[firstChar]) gradeFiles[firstChar] = [];
+        gradeFiles[firstChar].push(file);
+      }
+    }
+
+    // 파일명 기준 자연 정렬
+    for (const grade of Object.keys(gradeFiles)) {
+      gradeFiles[grade].sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" })
+      );
+    }
+
+    const photoGrades = ["A", "B", "C"];
+    let totalLoaded = 0;
+    showToast("사진 처리 중…");
+
+    for (const grade of photoGrades) {
+      if (!gradeFiles[grade]) continue;
+      const list = gradeFiles[grade];
+      const count = list.length;
+
+      // 개수 입력칸 업데이트
+      const countEl = $(`adminGrade${grade}`);
+      if (countEl) { countEl.value = count; countEl.dispatchEvent(new Event("input")); }
+
+      // pendingGradePhotos 초기화 & 채우기
+      pendingGradePhotos[grade] = new Array(count).fill(null);
+      for (let i = 0; i < list.length; i++) {
+        const dataUrl = await new Promise((res) => {
+          const reader = new FileReader();
+          reader.onload = ev => res(ev.target.result);
+          reader.readAsDataURL(list[i]);
+        });
+        pendingGradePhotos[grade][i] = await compressImage(dataUrl, 900, 675, 0.78);
+        totalLoaded++;
+      }
+      buildAdminPhotoSlots(grade);
+    }
+
+    updateAdminCountSummary();
+    showToast(`사진 ${totalLoaded}장을 등급별로 배치했습니다. 확인 후 적용하세요.`);
+    e.target.value = "";
+  });
 
   function makePrizeImage(prize, meta) {
     const label = escapeHtml(prize.imageLabel || prize.name);
