@@ -229,33 +229,62 @@
   }
 
   .status-strip {
-    margin-top: 12px;
+    margin-top: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    /* ticket-grid와 동일 max-width (topbar 14px 패딩 이미 포함) */
+    width: min(100%, 980px);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .status-row {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 6px;
+  }
+
+  .status-row-abc {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .status-row-defg {
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .grade-chip {
     min-width: 0;
-    padding: 7px 5px;
-    border-radius: 8px;
+    padding: 5px 4px;
+    border-radius: 7px;
     border: 1px solid color-mix(in srgb, var(--grade-color), transparent 44%);
     background: color-mix(in srgb, var(--grade-color), transparent 88%);
-    box-shadow: 0 0 18px color-mix(in srgb, var(--grade-color), transparent 78%);
+    box-shadow: 0 0 14px color-mix(in srgb, var(--grade-color), transparent 78%);
     text-align: center;
+    transition: opacity .3s, filter .3s;
+  }
+
+  .grade-chip.is-exhausted {
+    opacity: 0.38;
+    filter: grayscale(1);
+    border-color: rgba(255,255,255,.12);
+    box-shadow: none;
   }
 
   .grade-chip b {
     display: block;
-    font-size: 16px;
+    font-size: 13px;
     color: var(--grade-color);
+  }
+
+  .grade-chip.is-exhausted b {
+    color: var(--muted);
   }
 
   .grade-chip span {
     display: block;
     margin-top: 1px;
     color: var(--muted);
-    font-size: 10px;
+    font-size: 9px;
   }
 
   .grid-scroll {
@@ -1966,110 +1995,18 @@
     C: { rank: "C상", label: "레어", color: "#8a7cff", tone: "#29c7ff" },
     D: { rank: "D상", label: "굿", color: "#29c7ff", tone: "#7be8ff" },
     E: { rank: "E상", label: "베이직", color: "#37f2a3", tone: "#29c7ff" },
-    F: { rank: "F상", label: "참가상", color: "#b6c4d8", tone: "#ff8a1f" }
+    F: { rank: "F상", label: "참가상", color: "#b6c4d8", tone: "#ff8a1f" },
+    G: { rank: "G상", label: "꼴등상", color: "#4ecdc4", tone: "#29c7ff" }
   };
 
   const DEFAULT_PRODUCTS = [
-    { id: "A-001", grade: "A", name: "프리미엄 게이밍 노트북", desc: "최고 등급 한정 경품입니다.", imageLabel: "GAMING LAPTOP", accent: "#fff04c" },
-    { id: "A-002", grade: "A", name: "플래그십 스마트폰", desc: "최신형 스마트폰 교환권입니다.", imageLabel: "SMART PHONE", accent: "#fff04c" },
-    { id: "A-003", grade: "A", name: "4K OLED 모니터", desc: "몰입형 디스플레이 경품입니다.", imageLabel: "OLED DISPLAY", accent: "#fff04c" },
-    { id: "A-004", grade: "A", name: "하이엔드 태블릿 세트", desc: "펜과 키보드가 포함된 세트입니다.", imageLabel: "TABLET SET", accent: "#fff04c" },
-    { id: "B-001", grade: "B", name: "무선 헤드폰 Pro", desc: "노이즈 캔슬링 헤드폰입니다.", imageLabel: "HEADPHONE", accent: "#ff4f7b" },
-    { id: "B-002", grade: "B", name: "스마트 워치", desc: "운동 기록과 알림을 지원합니다.", imageLabel: "SMART WATCH", accent: "#ff4f7b" },
-    { id: "B-003", grade: "B", name: "콘솔 게임기", desc: "거실용 엔터테인먼트 경품입니다.", imageLabel: "GAME CONSOLE", accent: "#ff4f7b" },
-    { id: "B-004", grade: "B", name: "액션 카메라", desc: "여행과 스포츠 촬영에 적합합니다.", imageLabel: "ACTION CAM", accent: "#ff4f7b" },
-    { id: "B-005", grade: "B", name: "프리미엄 키보드", desc: "알루미늄 바디 기계식 키보드입니다.", imageLabel: "KEYBOARD", accent: "#ff4f7b" },
-    { id: "B-006", grade: "B", name: "무선 이어버드", desc: "휴대용 충전 케이스가 포함됩니다.", imageLabel: "EARBUDS", accent: "#ff4f7b" },
-    { id: "B-007", grade: "B", name: "로봇 청소기", desc: "스마트 매핑 기능을 제공합니다.", imageLabel: "ROBOT CLEAN", accent: "#ff4f7b" },
-    { id: "B-008", grade: "B", name: "전자책 리더기", desc: "눈이 편한 독서용 디바이스입니다.", imageLabel: "E-READER", accent: "#ff4f7b" },
-    { id: "C-001", grade: "C", name: "블루투스 스피커", desc: "강한 저음의 휴대용 스피커입니다.", imageLabel: "SPEAKER", accent: "#8a7cff" },
-    { id: "C-002", grade: "C", name: "스마트 조명 세트", desc: "앱으로 색상을 제어할 수 있습니다.", imageLabel: "LIGHT KIT", accent: "#8a7cff" },
-    { id: "C-003", grade: "C", name: "고속 충전 도킹 스테이션", desc: "여러 기기를 동시에 충전합니다.", imageLabel: "CHARGE DOCK", accent: "#8a7cff" },
-    { id: "C-004", grade: "C", name: "게이밍 마우스", desc: "고정밀 센서와 매크로 버튼을 제공합니다.", imageLabel: "MOUSE", accent: "#8a7cff" },
-    { id: "C-005", grade: "C", name: "캡슐 커피 머신", desc: "작은 공간에 어울리는 커피 머신입니다.", imageLabel: "COFFEE", accent: "#8a7cff" },
-    { id: "C-006", grade: "C", name: "미니 빔프로젝터", desc: "간편한 홈시네마 경품입니다.", imageLabel: "PROJECTOR", accent: "#8a7cff" },
-    { id: "C-007", grade: "C", name: "스마트 체중계", desc: "체성분 측정을 지원합니다.", imageLabel: "SMART SCALE", accent: "#8a7cff" },
-    { id: "C-008", grade: "C", name: "웹캠 스트리밍 세트", desc: "화상 회의와 방송용 세트입니다.", imageLabel: "WEBCAM KIT", accent: "#8a7cff" },
-    { id: "C-009", grade: "C", name: "무선 충전 패드", desc: "책상 위에 어울리는 충전 패드입니다.", imageLabel: "WIRELESS PAD", accent: "#8a7cff" },
-    { id: "C-010", grade: "C", name: "휴대용 SSD 1TB", desc: "빠른 전송 속도의 외장 저장장치입니다.", imageLabel: "SSD 1TB", accent: "#8a7cff" },
-    { id: "C-011", grade: "C", name: "프리미엄 보조배터리", desc: "대용량 고속 충전을 지원합니다.", imageLabel: "POWER BANK", accent: "#8a7cff" },
-    { id: "C-012", grade: "C", name: "스탠딩 데스크 램프", desc: "눈부심이 적은 데스크 조명입니다.", imageLabel: "DESK LAMP", accent: "#8a7cff" },
-    { id: "C-013", grade: "C", name: "디지털 액자", desc: "사진을 자동 슬라이드로 보여줍니다.", imageLabel: "PHOTO FRAME", accent: "#8a7cff" },
-    { id: "C-014", grade: "C", name: "휴대용 마사지건", desc: "운동 후 회복에 좋은 경품입니다.", imageLabel: "MASSAGER", accent: "#8a7cff" },
-    { id: "D-001", grade: "D", name: "편의점 상품권 5만원", desc: "전국 제휴 매장에서 사용할 수 있습니다.", imageLabel: "GIFT 50K", accent: "#29c7ff" },
-    { id: "D-002", grade: "D", name: "문화상품권 5만원", desc: "도서와 콘텐츠 구매에 사용할 수 있습니다.", imageLabel: "CULTURE 50K", accent: "#29c7ff" },
-    { id: "D-003", grade: "D", name: "영화 관람권 2매", desc: "주말에도 사용할 수 있는 관람권입니다.", imageLabel: "MOVIE TICKET", accent: "#29c7ff" },
-    { id: "D-004", grade: "D", name: "배달 앱 쿠폰 3만원", desc: "원하는 메뉴에 사용할 수 있습니다.", imageLabel: "FOOD COUPON", accent: "#29c7ff" },
-    { id: "D-005", grade: "D", name: "카페 금액권 3만원", desc: "음료와 디저트 교환에 적합합니다.", imageLabel: "CAFE 30K", accent: "#29c7ff" },
-    { id: "D-006", grade: "D", name: "게임 캐시 3만원", desc: "제휴 게임 충전에 사용할 수 있습니다.", imageLabel: "GAME CASH", accent: "#29c7ff" },
-    { id: "D-007", grade: "D", name: "캐릭터 피규어", desc: "랜덤 디자인으로 제공됩니다.", imageLabel: "FIGURE", accent: "#29c7ff" },
-    { id: "D-008", grade: "D", name: "스포츠 타월 세트", desc: "흡수력이 좋은 프리미엄 타월입니다.", imageLabel: "TOWEL SET", accent: "#29c7ff" },
-    { id: "D-009", grade: "D", name: "텀블러 세트", desc: "보온과 보냉을 지원합니다.", imageLabel: "TUMBLER", accent: "#29c7ff" },
-    { id: "D-010", grade: "D", name: "데스크 매트", desc: "넓고 안정적인 작업 공간을 만듭니다.", imageLabel: "DESK MAT", accent: "#29c7ff" },
-    { id: "D-011", grade: "D", name: "멀티 허브", desc: "노트북 확장 포트로 활용됩니다.", imageLabel: "USB HUB", accent: "#29c7ff" },
-    { id: "D-012", grade: "D", name: "차량용 충전기", desc: "차 안에서도 고속 충전이 가능합니다.", imageLabel: "CAR CHARGE", accent: "#29c7ff" },
-    { id: "D-013", grade: "D", name: "스마트폰 거치대", desc: "책상과 침대에서 편하게 사용합니다.", imageLabel: "PHONE STAND", accent: "#29c7ff" },
-    { id: "D-014", grade: "D", name: "노트북 파우치", desc: "13~15인치 기기를 보호합니다.", imageLabel: "LAPTOP CASE", accent: "#29c7ff" },
-    { id: "D-015", grade: "D", name: "휴대용 선풍기", desc: "작고 강한 바람을 제공합니다.", imageLabel: "MINI FAN", accent: "#29c7ff" },
-    { id: "D-016", grade: "D", name: "무드등", desc: "은은한 조명 효과를 제공합니다.", imageLabel: "MOOD LIGHT", accent: "#29c7ff" },
-    { id: "D-017", grade: "D", name: "보드게임 세트", desc: "가족과 친구가 함께 즐길 수 있습니다.", imageLabel: "BOARD GAME", accent: "#29c7ff" },
-    { id: "D-018", grade: "D", name: "미니 공구 키트", desc: "간단한 수리에 유용합니다.", imageLabel: "TOOL KIT", accent: "#29c7ff" },
-    { id: "D-019", grade: "D", name: "프리미엄 양말 세트", desc: "데일리용 구성입니다.", imageLabel: "SOCKS SET", accent: "#29c7ff" },
-    { id: "D-020", grade: "D", name: "무선 마우스", desc: "휴대하기 좋은 조용한 마우스입니다.", imageLabel: "WIRELESS MOUSE", accent: "#29c7ff" },
-    { id: "E-001", grade: "E", name: "카페 아메리카노 쿠폰", desc: "가볍게 즐기는 음료 쿠폰입니다.", imageLabel: "COFFEE", accent: "#37f2a3" },
-    { id: "E-002", grade: "E", name: "아이스티 쿠폰", desc: "상큼한 음료 교환권입니다.", imageLabel: "ICE TEA", accent: "#37f2a3" },
-    { id: "E-003", grade: "E", name: "도넛 교환권", desc: "간식으로 좋은 도넛 쿠폰입니다.", imageLabel: "DONUT", accent: "#37f2a3" },
-    { id: "E-004", grade: "E", name: "아이스크림 쿠폰", desc: "제휴 매장에서 교환 가능합니다.", imageLabel: "ICE CREAM", accent: "#37f2a3" },
-    { id: "E-005", grade: "E", name: "편의점 1만원권", desc: "간편하게 사용할 수 있습니다.", imageLabel: "STORE 10K", accent: "#37f2a3" },
-    { id: "E-006", grade: "E", name: "스낵 박스", desc: "인기 과자 랜덤 박스입니다.", imageLabel: "SNACK BOX", accent: "#37f2a3" },
-    { id: "E-007", grade: "E", name: "캐릭터 키링", desc: "랜덤 캐릭터 키링입니다.", imageLabel: "KEY RING", accent: "#37f2a3" },
-    { id: "E-008", grade: "E", name: "스티커 팩", desc: "다꾸와 노트 꾸미기에 좋습니다.", imageLabel: "STICKER", accent: "#37f2a3" },
-    { id: "E-009", grade: "E", name: "메모 패드", desc: "업무와 학습에 쓰기 좋습니다.", imageLabel: "MEMO PAD", accent: "#37f2a3" },
-    { id: "E-010", grade: "E", name: "볼펜 세트", desc: "부드러운 필기감을 제공합니다.", imageLabel: "PEN SET", accent: "#37f2a3" },
-    { id: "E-011", grade: "E", name: "마스킹 테이프", desc: "꾸미기용 랜덤 테이프입니다.", imageLabel: "MASKING TAPE", accent: "#37f2a3" },
-    { id: "E-012", grade: "E", name: "핸드크림", desc: "휴대하기 좋은 사이즈입니다.", imageLabel: "HAND CREAM", accent: "#37f2a3" },
-    { id: "E-013", grade: "E", name: "립밤", desc: "사계절 필수 케어 아이템입니다.", imageLabel: "LIP BALM", accent: "#37f2a3" },
-    { id: "E-014", grade: "E", name: "휴대용 티슈 세트", desc: "가방에 넣기 좋은 구성입니다.", imageLabel: "TISSUE", accent: "#37f2a3" },
-    { id: "E-015", grade: "E", name: "미니 퍼즐", desc: "짧은 시간 즐기기 좋은 퍼즐입니다.", imageLabel: "PUZZLE", accent: "#37f2a3" },
-    { id: "E-016", grade: "E", name: "캔디 파우치", desc: "달콤한 랜덤 캔디 구성입니다.", imageLabel: "CANDY", accent: "#37f2a3" },
-    { id: "E-017", grade: "E", name: "젤리 박스", desc: "인기 젤리 랜덤 구성입니다.", imageLabel: "JELLY", accent: "#37f2a3" },
-    { id: "E-018", grade: "E", name: "탄산음료 쿠폰", desc: "시원한 음료 교환권입니다.", imageLabel: "SODA", accent: "#37f2a3" },
-    { id: "E-019", grade: "E", name: "라면 교환권", desc: "편의점에서 교환 가능합니다.", imageLabel: "NOODLE", accent: "#37f2a3" },
-    { id: "E-020", grade: "E", name: "치킨 할인권", desc: "제휴 매장에서 사용할 수 있습니다.", imageLabel: "CHICKEN", accent: "#37f2a3" },
-    { id: "E-021", grade: "E", name: "피자 할인권", desc: "배달 주문에 사용 가능합니다.", imageLabel: "PIZZA", accent: "#37f2a3" },
-    { id: "E-022", grade: "E", name: "포토카드 팩", desc: "랜덤 디자인으로 제공됩니다.", imageLabel: "PHOTO CARD", accent: "#37f2a3" },
-    { id: "E-023", grade: "E", name: "카드 지갑", desc: "가볍게 들고 다니기 좋습니다.", imageLabel: "CARD WALLET", accent: "#37f2a3" },
-    { id: "E-024", grade: "E", name: "케이블 정리 클립", desc: "책상 위 선 정리에 유용합니다.", imageLabel: "CABLE CLIP", accent: "#37f2a3" },
-    { id: "F-001", grade: "F", name: "참가 감사 포인트 100P", desc: "다음 이벤트에 사용할 수 있습니다.", imageLabel: "100 POINT", accent: "#b6c4d8" },
-    { id: "F-002", grade: "F", name: "참가 감사 포인트 200P", desc: "소소하지만 확실한 리워드입니다.", imageLabel: "200 POINT", accent: "#b6c4d8" },
-    { id: "F-003", grade: "F", name: "랜덤 배지", desc: "작은 수집형 배지입니다.", imageLabel: "BADGE", accent: "#b6c4d8" },
-    { id: "F-004", grade: "F", name: "랜덤 엽서", desc: "기념용 일러스트 엽서입니다.", imageLabel: "POSTCARD", accent: "#b6c4d8" },
-    { id: "F-005", grade: "F", name: "디지털 배경화면", desc: "다운로드형 리워드입니다.", imageLabel: "WALLPAPER", accent: "#b6c4d8" },
-    { id: "F-006", grade: "F", name: "쿠폰 재도전권 1장", desc: "별도 이벤트에서 사용할 수 있습니다.", imageLabel: "RETRY PASS", accent: "#b6c4d8" },
-    { id: "F-007", grade: "F", name: "미니 스티커 1장", desc: "랜덤 디자인 스티커입니다.", imageLabel: "MINI STICKER", accent: "#b6c4d8" },
-    { id: "F-008", grade: "F", name: "캔디 1개", desc: "현장 수령용 작은 간식입니다.", imageLabel: "CANDY ONE", accent: "#b6c4d8" },
-    { id: "F-009", grade: "F", name: "초콜릿 1개", desc: "달콤한 참가상입니다.", imageLabel: "CHOCOLATE", accent: "#b6c4d8" },
-    { id: "F-010", grade: "F", name: "생수 교환권", desc: "현장 제휴 부스에서 교환합니다.", imageLabel: "WATER", accent: "#b6c4d8" },
-    { id: "F-011", grade: "F", name: "껌 교환권", desc: "작은 간식 쿠폰입니다.", imageLabel: "GUM", accent: "#b6c4d8" },
-    { id: "F-012", grade: "F", name: "랜덤 문구 1종", desc: "펜, 클립, 메모지 중 랜덤입니다.", imageLabel: "STATIONERY", accent: "#b6c4d8" },
-    { id: "F-013", grade: "F", name: "종이 책갈피", desc: "기념 디자인 책갈피입니다.", imageLabel: "BOOKMARK", accent: "#b6c4d8" },
-    { id: "F-014", grade: "F", name: "응원 메시지 카드", desc: "랜덤 문구가 담긴 카드입니다.", imageLabel: "MESSAGE", accent: "#b6c4d8" },
-    { id: "F-015", grade: "F", name: "다음 구매 3% 할인", desc: "온라인 스토어에서 사용 가능합니다.", imageLabel: "3% OFF", accent: "#b6c4d8" },
-    { id: "F-016", grade: "F", name: "다음 구매 5% 할인", desc: "이벤트 기간 내 사용 가능합니다.", imageLabel: "5% OFF", accent: "#b6c4d8" },
-    { id: "F-017", grade: "F", name: "랜덤 이미지 카드", desc: "디지털 카드 리워드입니다.", imageLabel: "IMAGE CARD", accent: "#b6c4d8" },
-    { id: "F-018", grade: "F", name: "미니 메모 1권", desc: "휴대용 작은 노트입니다.", imageLabel: "MINI MEMO", accent: "#b6c4d8" },
-    { id: "F-019", grade: "F", name: "음료 할인권", desc: "제휴 카페에서 사용할 수 있습니다.", imageLabel: "DRINK OFF", accent: "#b6c4d8" },
-    { id: "F-020", grade: "F", name: "스낵 할인권", desc: "간식 구매 시 사용 가능합니다.", imageLabel: "SNACK OFF", accent: "#b6c4d8" },
-    { id: "F-021", grade: "F", name: "랜덤 컬러펜 1개", desc: "색상은 랜덤으로 제공됩니다.", imageLabel: "COLOR PEN", accent: "#b6c4d8" },
-    { id: "F-022", grade: "F", name: "미니 자석", desc: "작은 수집형 자석입니다.", imageLabel: "MAGNET", accent: "#b6c4d8" },
-    { id: "F-023", grade: "F", name: "랜덤 씰 스티커", desc: "다꾸용 씰 스티커입니다.", imageLabel: "SEAL", accent: "#b6c4d8" },
-    { id: "F-024", grade: "F", name: "포인트 300P", desc: "누적해서 사용할 수 있는 포인트입니다.", imageLabel: "300 POINT", accent: "#b6c4d8" },
-    { id: "F-025", grade: "F", name: "응모권 1장", desc: "추첨 이벤트 참여권입니다.", imageLabel: "ENTRY PASS", accent: "#b6c4d8" },
-    { id: "F-026", grade: "F", name: "랜덤 사탕 세트", desc: "작은 사탕 묶음입니다.", imageLabel: "SWEET SET", accent: "#b6c4d8" },
-    { id: "F-027", grade: "F", name: "디지털 쿠폰 500원", desc: "온라인 결제 시 사용할 수 있습니다.", imageLabel: "500 WON", accent: "#b6c4d8" },
-    { id: "F-028", grade: "F", name: "현장 포토존 이용권", desc: "이벤트 포토존에서 사용합니다.", imageLabel: "PHOTO ZONE", accent: "#b6c4d8" },
-    { id: "F-029", grade: "F", name: "랜덤 미니 카드", desc: "기념용 미니 카드입니다.", imageLabel: "MINI CARD", accent: "#b6c4d8" },
-    { id: "F-030", grade: "F", name: "감사 쿠폰", desc: "참여해 주셔서 감사합니다.", imageLabel: "THANK YOU", accent: "#b6c4d8" }
+    { id: "A-001", grade: "A", name: "A상", desc: "A상 중 택 1", imageLabel: "A", accent: "#fff04c" },
+    { id: "B-001", grade: "B", name: "B상", desc: "B상 중 택 1", imageLabel: "B", accent: "#ff4f7b" },
+    { id: "C-001", grade: "C", name: "C상", desc: "C상 중 택 1", imageLabel: "C", accent: "#8a7cff" },
+    { id: "D-001", grade: "D", name: "D상", desc: "D상 중 택 1", imageLabel: "D", accent: "#29c7ff" },
+    { id: "E-001", grade: "E", name: "E상", desc: "E상 중 택 1", imageLabel: "E", accent: "#37f2a3" },
+    { id: "F-001", grade: "F", name: "F상", desc: "F상 중 택 1", imageLabel: "F", accent: "#b6c4d8" },
+    { id: "G-001", grade: "G", name: "G상", desc: "G상 중 택 1", imageLabel: "G", accent: "#4ecdc4" }
   ];
 
   const DEFAULT_CONFIG = {
@@ -2077,8 +2014,8 @@
     triggerProgress: .95,
     autoOpenDuration: 1550,
     headerAlign: "left",
-    gradePhotos: { A: [], B: [] },
-    gradePhotoSoldOut: { A: [], B: [] },
+    gradePhotos: { A: [], B: [], C: [] },
+    gradePhotoSoldOut: { A: [], B: [], C: [] },
     copy: {
       homeTitle: "KUJI 온라인 경품 뽑기",
       homeSubtitle: "쿠폰을 선택하면 슬라이드 오픈 화면으로 이동합니다.",
@@ -2086,8 +2023,8 @@
       openSubtitle: "마찰 지점의 종이가 벗겨집니다. 게이지가 95%를 넘으면 결과가 발표됩니다.",
       resultTitle: "축하합니다!"
     },
-    gradeCounts: { A: 1, B: 4, C: 10, D: 18, E: 27, F: 40 },
-    gradeRates: { A: 1, B: 4, C: 10, D: 18, E: 27, F: 40 },
+    gradeCounts: { A: 1, B: 4, C: 10, D: 18, E: 27, F: 20, G: 20 },
+    gradeRates: { A: 1, B: 4, C: 10, D: 18, E: 27, F: 20, G: 20 },
     products: DEFAULT_PRODUCTS
   };
 
@@ -2107,7 +2044,7 @@
     tickets: [],
     selectedIndex: null,
     currentResult: null,
-    gradePhotoSoldOut: { A: [], B: [] }
+    gradePhotoSoldOut: { A: [], B: [], C: [] }
   };
 
   // Tracks which ticket/photo index is pending prize confirmation
@@ -2315,7 +2252,7 @@
     });
     state.selectedIndex = null;
     state.currentResult = null;
-    state.gradePhotoSoldOut = { A: [], B: [] };
+    state.gradePhotoSoldOut = { A: [], B: [], C: [] };
     saveState();
   }
 
@@ -2385,15 +2322,17 @@
       return acc;
     }, {});
 
-    strip.innerHTML = gradeOrder.map((grade) => {
+    const makeChip = (grade) => {
       const meta = GRADE_META[grade];
-      return `
-        <div class="grade-chip" style="--grade-color:${meta.color}">
-          <b>${grade}</b>
-          <span>${wonCounts[grade]}/${config.gradeCounts[grade]}개</span>
-        </div>
-      `;
-    }).join("");
+      if (!meta) return "";
+      const total = config.gradeCounts[grade] || 0;
+      const won = wonCounts[grade] || 0;
+      const exhausted = total > 0 && won >= total;
+      return `<div class="grade-chip${exhausted ? " is-exhausted" : ""}" style="--grade-color:${meta.color}"><b>${grade}</b><span>${won}/${total}개</span></div>`;
+    };
+    strip.innerHTML =
+      `<div class="status-row status-row-abc">${["A","B","C"].map(makeChip).join("")}</div>` +
+      `<div class="status-row status-row-defg">${["D","E","F","G"].map(makeChip).join("")}</div>`;
   }
 
   function renderGrid() {
@@ -2611,7 +2550,7 @@
       populateAdminForm(sanitizeConfig(DEFAULT_CONFIG));
       showToast("기본 설정을 불러왔습니다.");
     });
-    // F상 수동 입력 — 자동계산 없음
+    // G상 수동 입력 — 자동계산 없음
     $("applyConfigBtn").addEventListener("click", applyAdminSettings);
     $("adminAlignBtns").addEventListener("click", (e) => {
       const btn = e.target.closest(".align-btn");
@@ -3020,7 +2959,7 @@
     const meta = GRADE_META[ticket.prize.grade];
     $("reveal-screen").style.setProperty("--grade-color", meta.color);
     $("revealLetter").textContent = ticket.prize.grade;
-    $("revealRank").textContent = `${meta.rank} · ${ticket.prize.name}`;
+    $("revealRank").textContent = ticket.prize.name === meta.rank ? meta.rank : `${meta.rank} · ${ticket.prize.name}`;
     showScreen("reveal-screen");
     startRevealExplosion(meta.color, meta.tone);
     setTimeout(goResult, 1650);
@@ -3109,7 +3048,7 @@
 
     const grade = ticket.prize.grade;
     // A/B 등급이고 사진이 있으면 → 상품 선택 화면으로
-    if (["A", "B"].includes(grade) && config.gradePhotos?.[grade]?.some(Boolean)) {
+    if (["A", "B", "C"].includes(grade) && config.gradePhotos?.[grade]?.some(Boolean)) {
       showPrizeSelectScreen(ticket);
       return;
     }
@@ -3123,7 +3062,7 @@
     $("resultCard").style.setProperty("--grade-color", meta.color);
     $("resultBadge").textContent = ticket.prize.grade;
     $("resultName").textContent = ticket.prize.name;
-    $("resultDesc").textContent = `${meta.rank} · ${ticket.prize.desc}`;
+    $("resultDesc").textContent = ticket.prize.desc;
     $("voucherCode").textContent = `교환권 코드: ${ticket.voucherCode}`;
     // 선택된 사진 > 슬롯 사진 > 생성 이미지 순서
     const slotPhoto = config.gradePhotos?.[ticket.prize.grade]?.[ticket.photoSlotIndex] || null;
@@ -3223,7 +3162,7 @@
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
 
         // Find data rows — skip header rows (first non-empty row that starts with a grade letter A-F)
-        const gradeSet = new Set(["A", "B", "C", "D", "E", "F"]);
+        const gradeSet = new Set(["A", "B", "C", "D", "E", "F", "G"]);
         const parsed = {};
 
         for (const row of rows) {
@@ -3267,14 +3206,14 @@
           const countEl = $(`adminGrade${grade}`);
           const nameEl = $(`adminProduct${grade}Name`);
           if (countEl) countEl.value = info.qty;
-          if (nameEl && info.name) nameEl.value = info.name;
+          if (nameEl) nameEl.value = grade + "상";
           const descElX = $(`adminProduct${grade}Desc`);
           if (descElX) descElX.value = `${grade}상 중 택 1`;
         }
 
-        updateFGradeAuto();
+        updateGGradeAuto();
         // Rebuild photo slots after grade counts changed
-        ["A", "B"].forEach((g) => buildAdminPhotoSlots(g));
+        ["A", "B", "C"].forEach((g) => buildAdminPhotoSlots(g));
         showToast("엑셀 데이터를 불러왔습니다. 내용을 확인 후 적용해 주세요.");
       } catch (err) {
         showToast("파일을 읽는 중 오류가 발생했습니다.");
@@ -3408,21 +3347,21 @@
   }
 
   // Stores photo data URLs while admin form is open
-  const pendingGradePhotos = { A: [], B: [] };
+  const pendingGradePhotos = { A: [], B: [], C: [] };
 
   function buildAdminProductFields() {
     const container = $("adminProductFields");
     if (!container) return;
     container.innerHTML = gradeOrder.map((grade) => {
       const meta = GRADE_META[grade];
-      const hasPhotoUpload = ["A", "B"].includes(grade);
+      const hasPhotoUpload = ["A", "B", "C"].includes(grade);
       return `
         <div class="admin-product-row">
           <div class="admin-product-grade-badge" style="--grade-color:${meta.color}">${grade}</div>
           <div class="admin-product-inputs">
             <label class="admin-field">
               ${meta.rank} 상품명
-              <input id="adminProduct${grade}Name" type="text" placeholder="${meta.label}">
+              <input id="adminProduct${grade}Name" type="text" placeholder="${grade}상">
             </label>
             <label class="admin-field">
               설명
@@ -3435,7 +3374,7 @@
     }).join("");
 
     // Build initial photo slots and attach count-change listeners for A/B
-    ["A", "B"].forEach((grade) => {
+    ["A", "B", "C"].forEach((grade) => {
       buildAdminPhotoSlots(grade);
       const countInput = $(`adminGrade${grade}`);
       if (countInput && !countInput._photoListener) {
@@ -3558,8 +3497,8 @@
       const descEl = $(`adminProduct${grade}Desc`);
       if (nameEl && descEl) {
         const firstProduct = (source.products || []).find((p) => p.grade === grade);
-        nameEl.value = firstProduct ? firstProduct.name : "";
-        descEl.value = firstProduct ? firstProduct.desc : "";
+        nameEl.value = firstProduct ? firstProduct.name : (grade + "상");
+        descEl.value = firstProduct ? firstProduct.desc : (grade + "상 중 택 1");
       }
     });
     $("adminHomeTitle").value = source.copy.homeTitle;
@@ -3573,11 +3512,11 @@
       btn.classList.toggle("is-active", btn.dataset.align === align);
     });
     // Load saved photos into pendingGradePhotos and rebuild slots
-    ["A", "B"].forEach((grade) => {
+    ["A", "B", "C"].forEach((grade) => {
       pendingGradePhotos[grade] = Array.from(source.gradePhotos?.[grade] || []);
       buildAdminPhotoSlots(grade);
     });
-    updateFGradeAuto();
+    updateGGradeAuto();
   }
 
   function readAdminInteger(id) {
@@ -3598,6 +3537,11 @@
 
   function updateFGradeAuto() {
     // F상은 수동 입력 방식으로 변경 — 자동 계산 없음
+    updateAdminCountSummary();
+  }
+
+  function updateGGradeAuto() {
+    // G상은 수동 입력 방식으로 변경 — 자동 계산 없음
     updateAdminCountSummary();
   }
 
@@ -3627,12 +3571,13 @@
       const descEl = $(`adminProduct${grade}Desc`);
       const customName = nameEl ? nameEl.value.trim() : "";
       const customDesc = descEl ? descEl.value.trim() : "";
-      if (customName) {
+      if (customName || true) {
         const meta = GRADE_META[grade];
+        const finalName = customName || (grade + "상");
         return [{
           id: `${grade}-custom-001`,
           grade,
-          name: customName,
+          name: finalName,
           desc: customDesc || `${grade}상 중 택 1`,
           imageLabel: customName.slice(0, 14),
           accent: meta.color
@@ -3652,9 +3597,10 @@
       headerAlign,
       gradePhotos: {
         A: pendingGradePhotos.A.slice(0, gradeCounts.A),
-        B: pendingGradePhotos.B.slice(0, gradeCounts.B)
+        B: pendingGradePhotos.B.slice(0, gradeCounts.B),
+        C: pendingGradePhotos.C.slice(0, gradeCounts.C)
       },
-      gradePhotoSoldOut: { A: [], B: [] },
+      gradePhotoSoldOut: { A: [], B: [], C: [] },
       products: updatedProducts.length ? updatedProducts : DEFAULT_PRODUCTS,
       copy: {
         homeTitle: $("adminHomeTitle").value.trim() || DEFAULT_CONFIG.copy.homeTitle,
